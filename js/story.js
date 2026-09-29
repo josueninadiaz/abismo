@@ -31,7 +31,7 @@
     yield say('yo', 'No recuerdo cómo llegué aquí.');
     yield say('yo', 'No recuerdo nada. Ni siquiera mi nombre.');
     G.EX.frozen = false;
-    G.UI.hint('[move]: moverte   [a]: examinar / hablar   [start]: menú', 600);
+    G.UI.hint('[move]: moverte   [a]: examinar / hablar   [j]: saltar   [start]: menú', 600);
     yield G.titleCard('Gruta del Despertar');
     G.setFlag('visto_gruta');
   };
@@ -261,6 +261,7 @@
   S.tutorial_combate = function* () {
     yield say('yo', 'Hay algo pegado a él. Como sellos de cristal sobre su mente y su cuerpo.');
     yield say(null, G.keys('[a]: golpe (aturde si llenas su Resistencia)   [x]: esquivar (eres intocable mientras ruedas)'));
+    yield say(null, G.keys('[j]: saltar. Sirve para pasar por encima de las ondas del suelo y las embestidas.'));
     yield say(null, G.keys('Las habilidades rompen los sellos: [s] (o [y] para usar la que pide el sello actual).'));
     yield say(null, 'Cada sello solo cede ante una habilidad. Si está aturdido, cede antes.');
   };

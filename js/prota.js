@@ -272,6 +272,15 @@
     poseS({}), poseS({ tx: -1 }), poseS({ by: 1, hy: -1, tx: -1, ty: 1 }), poseS({ by: 1, hy: -1, ty: 1 }),
     poseS({ tx: 1 }), poseS({ tx: 1, blink: true }), poseS({}), poseS({ ear: true, tx: -1 }),
   ];
+  // salto: subiendo (piernas recogidas, brazos arriba) y cayendo (piernas estiradas, brazos abiertos)
+  const jumpDU = (v) => [
+    poseDU(v, { by: -1, hy: -1, al: -3, ar: -3, ll: [-3, 1], lr: [-3, -1], tx: 1, ear: true }),
+    poseDU(v, { by: 0, hy: -1, al: -1, ar: -1, ll: [-1, 0], lr: [-1, 0], tx: -1 }),
+  ];
+  const jumpS = [
+    poseS({ by: -1, hy: -1, lf: [2, -3], lb: [-1, -2], af: [1, -3], ab: [-1, -3], tx: -1, ty: -2, ear: true }),
+    poseS({ lf: [1, -1], lb: [-2, 0], af: [2, -1], ab: [-2, -1], tx: 1, ty: 1 }),
+  ];
   // combate (de perfil): concentrarse, lanzar, golpear, recibir, agacharse para rodar
   const combat = {
     idle: [poseS({}), poseS({ tx: -1 }), poseS({ by: 1, hy: -1, tx: -1 }), poseS({ by: 1, hy: -1 })],
@@ -281,12 +290,13 @@
     strike: [poseS({ arm: 'up', lean: 2, lf: [3, 0], lb: [-2, 0], tx: -2, by: 1 }), poseS({ af: [2, -1], lean: 1, lf: [2, 0], lb: [-1, 0], tx: -1 })],
     hurt: [poseS({ lean: -1, af: [-2, -1], ab: [-2, -1], blink: true, tx: 1, ty: -1, by: 1 })],
     crouch: [poseS({ by: 3, hy: 1, lf: [1, -1], lb: [-1, -1], af: [1, -2], tx: 1, ear: true })],
+    jump: jumpS,
   };
 
   return {
-    down: { walk: walkDU('d'), idle: idleDU('d') },
-    up: { walk: walkDU('u'), idle: idleDU('u') },
-    side: { walk: walkS, idle: idleS },
+    down: { walk: walkDU('d'), idle: idleDU('d'), jump: jumpDU('d') },
+    up: { walk: walkDU('u'), idle: idleDU('u'), jump: jumpDU('u') },
+    side: { walk: walkS, idle: idleS, jump: jumpS },
     combat,
   };
   }

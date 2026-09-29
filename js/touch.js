@@ -55,8 +55,8 @@
     b.addEventListener('touchend', up, { passive: false }); b.addEventListener('touchcancel', up, { passive: false });
     return b;
   };
-  const bA = btn('a', 'A', 't-a'), bB = btn('b', 'B', 't-b'), bX = btn('x', 'ESQ', 't-x'), bY = btn('y', 'Y', 't-y');
-  pad.append(bA, bB, bX, bY);
+  const bA = btn('a', 'A', 't-a'), bB = btn('b', 'B', 't-b'), bX = btn('x', 'ESQ', 't-x'), bJ = btn('j', 'SALTO', 't-y t-j');
+  pad.append(bA, bB, bX, bJ);
   const menu = btn('start', '≡', 't-menu');
   root.appendChild(menu);
   const skills = el('div', 't-skills');
@@ -87,7 +87,6 @@
     root.style.display = show ? 'block' : 'none';
     skills.style.display = combat ? 'flex' : 'none';
     bX.style.display = combat ? '' : 'none';
-    bY.style.display = combat ? '' : 'none';
     SK.forEach(([, , ], i) => { sBtns[i].style.display = G.save && G.save.skills.includes(['mente', 'recuerdos', 'cuerpo', 'alma', 'ser'][i]) ? '' : 'none'; });
   };
   TU.sync();

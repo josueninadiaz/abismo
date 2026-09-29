@@ -408,6 +408,9 @@
     boom() { thump(50, 0.8); crunch(0.5, 0.3); },
     heart() { thump(70, 0.35); thump(60, 0.3, 0.18); },
     murcielagos() { A.batsNow(); },
+    jump() { sweep(260, 700, 0.12, 0.08, 'triangle'); },
+    land() { thump(120, 0.12); crunch(0.05, 0.05); },
+    splash() { crunch(0.3, 0.2); for (let i = 0; i < 4; i++) tone('sine', 600 + Math.random() * 900, 0.2, 0.04, i * 0.04, true); },
   };
   function tone(type, f, dur, v, delay = 0, rev = false) {
     const t = ctx.currentTime + delay, g = gainTo(0, sfxBus);

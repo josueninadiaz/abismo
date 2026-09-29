@@ -13,6 +13,7 @@
       this.home = { x: this.x, z: this.z }; this.wait = G.ri(60, 200); this.goal = null;
       this.r = o.scale ? 7 : 5;
       this.phase = G.ri(0, 200);
+      this.jz = 0; this.vz = 0; this.air = false;
       const set = G.SPR[spr];
       this.bb = G.W3.billboard((set.idle ? set.idle.down : set.down)[0], { scale: o.scale || 1, glow: o.glow });
       if (o.ghost) {
@@ -26,6 +27,7 @@
     // caminando: 6 pasos; quieto: respira, mece la cola y parpadea (cada uno a su ritmo)
     frame() {
       const set = G.SPR[this.spr];
+      if (this.air && set.jump) return set.jump[this.dir][this.vz > 0 ? 0 : 1];
       if (this.moving) { const fr = set[this.dir] || set.down; return fr[Math.floor(this.anim / 6) % fr.length]; }
       const idle = set.idle && set.idle[this.dir];
       if (idle) return idle[Math.floor((G.t + this.phase) / 15) % idle.length];
@@ -42,8 +44,10 @@
       let moved = false;
       if (dx && E.free(this.x + dx, this.z, this)) { this.x += dx; moved = true; }
       if (dz && E.free(this.x, this.z + dz, this)) { this.z += dz; moved = true; }
-      const gh = Z.hAt(Math.floor(this.x / TS), Math.floor(this.z / TS));
-      this.y += (Math.max(0, gh) - this.y) * 0.35;
+      if (!this.air) {
+        const gh = Z.hAt(Math.floor(this.x / TS), Math.floor(this.z / TS));
+        this.y += (Math.max(0, gh) - this.y) * 0.35;
+      }
       return moved;
     }
     update() {
@@ -62,7 +66,12 @@
       }
       if (this.path) this.followPath();
       this.bb.set(this.frameOverride || this.frame());
-      this.bb.place(this.x, this.y, this.z);
+      this.bb.place(this.x, this.y + this.jz, this.z);
+      if (this.bb.blob) {
+        this.bb.blob.position.y = 0.4 - this.jz;
+        const k = 1 / (1 + this.jz * 0.04);
+        this.bb.blob.material.opacity = 0.8 * k;
+      }
     }
     followPath() {
       const p = this.path[0];
@@ -85,8 +94,11 @@
       const cx = Math.floor((x + ox) / TS), cy = Math.floor((z + oz) / TS);
       if (cx < 0 || cy < 0 || cx >= Z.w || cy >= Z.h) return false;
       const c = Z.cells[cy][cx];
-      if (c.t.water || c.t.pit) return false;
-      if (Math.abs(c.h - base) > 9) return false;
+      const air = who && who.air, top = base + (who ? who.jz : 0);
+      // en el aire se puede cruzar agua y bajar de las repisas; subir, solo lo que alcance el salto
+      if ((c.t.water || c.t.pit) && !(air && who.jz > 3)) return false;
+      if (c.h > top + 9) return false;
+      if (!air && c.h < base - 9 && !c.t.water && !c.t.pit) return false;
     }
     for (const s of Z.solids) if (Math.hypot(s.x - x, (s.z - z) * 1.3) < s.r + r * 0.6) return false;
     for (const a of E.actors) if (a !== who && !a.ghost && Math.hypot(a.x - x, (a.z - z) * 1.4) < a.r + r) return false;
@@ -149,10 +161,12 @@
         P.moving = P.step(d.x * sp, d.y * sp) || true;
         if (P.moving && G.t - lastStep > 18) { lastStep = G.t; G.audio.sfx('step'); }
       } else P.moving = false;
+      if (G.pressed('j') && !P.air) jump(P);
       if (G.pressed('a')) interact();
       else if (G.pressed('start') || G.pressed('b')) G.UI.openMenu();
       checkZone();
     } else if (!P.path) P.moving = false;
+    stepJump(P);
     for (const a of E.actors) a.update();
     // la influencia del pilar: más cerca, más se tuerce la imagen y la música
     let cor = 0;
@@ -165,6 +179,40 @@
     G.W3.update(P.x, P.z, P.y);
     stepFx();
   };
+
+  // ── salto ──
+  function jump(P) {
+    P.air = true; P.vz = 2.7; P.hA = P.y;
+    G.audio.sfx('jump');
+  }
+  function stepJump(P) {
+    const Z = G.W3.zone();
+    const cx = Math.floor(P.x / TS), cy = Math.floor(P.z / TS), c = Z.cells[cy] && Z.cells[cy][cx];
+    if (!P.air) {
+      if (c && !c.t.water && !c.t.pit) P.safe = { x: P.x, z: P.z, y: P.y };
+      return;
+    }
+    P.hA += P.vz; P.vz -= 0.19;
+    const ground = c ? c.h : 0;
+    if (P.hA <= Math.max(ground, 0) && P.vz < 0) {
+      P.air = false; P.jz = 0; P.vz = 0;
+      if (c && (c.t.water || c.t.pit)) {
+        // al agua: chapuzón y de vuelta a tierra firme
+        G.fxBurst(P.x, 0, P.z, '#7affe8', 16, 0.6);
+        G.audio.sfx('splash');
+        const s = P.safe || { x: P.x, z: P.z, y: 0 };
+        P.x = s.x; P.z = s.z; P.y = s.y;
+        G.R.flash.r = 0.4; G.R.flash.g = 1; G.R.flash.b = 0.9; G.R.flash.a = 0.25;
+        return;
+      }
+      P.y = Math.max(0, ground);
+      G.fxBurst(P.x, P.y + 1, P.z, '#8a90a0', 7, 0.4);
+      G.audio.sfx('land');
+      return;
+    }
+    P.y = Math.max(0, ground);
+    P.jz = Math.max(0, P.hA - P.y);
+  }
 
   // ── hablar / examinar ──
   const DIRV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };

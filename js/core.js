@@ -29,11 +29,11 @@ G.dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
 
 // ── entrada ──
 // botones lógicos: up down left right a b x y l r start  (y 1..5 = habilidades)
-const BTNS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'start', 's1', 's2', 's3', 's4', 's5'];
+const BTNS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'j', 'start', 's1', 's2', 's3', 's4', 's5'];
 const inp = (G.input = { held: {}, pressed: {}, kb: {}, tap: {}, touch: {}, stick: { x: 0, y: 0 } });
 const KEYMAP = {
   ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
-  KeyZ: 'a', Space: 'a', Enter: 'a', KeyJ: 'a',
+  KeyZ: 'a', Enter: 'a', KeyJ: 'a', Space: 'j',
   KeyX: 'b', Backspace: 'b', KeyK: 'b',
   ShiftLeft: 'x', ShiftRight: 'x', KeyC: 'x', KeyL: 'x',
   KeyQ: 'y', KeyI: 'y',
@@ -56,12 +56,12 @@ addEventListener('blur', () => { inp.kb = {}; inp.touch = {}; inp.stick.x = inp.
 
 // nombre del botón según el dispositivo, para los textos de ayuda
 G.BTN_LABEL = {
-  kb: { a: 'Z', b: 'X', x: 'Shift', y: 'Q', start: 'Esc', move: 'WASD', s: '1-5' },
-  touch: { a: 'A', b: 'B', x: 'ESQ', y: 'Y', start: '≡', move: 'el joystick', s: 'los botones' },
-  pad: { a: 'A', b: 'B', x: 'RB', y: 'Y', start: 'Start', move: 'el stick', s: 'LB+botón' },
+  kb: { a: 'Z', b: 'X', x: 'Shift', y: 'Q', j: 'Espacio', start: 'Esc', move: 'WASD', s: '1-5' },
+  touch: { a: 'A', b: 'B', x: 'ESQ', y: 'Y', j: 'SALTO', start: '≡', move: 'el joystick', s: 'los botones' },
+  pad: { a: 'A', b: 'B', x: 'RB', y: 'Y', j: 'X', start: 'Start', move: 'el stick', s: 'LB+botón' },
 };
 G.btn = (k) => G.BTN_LABEL[G.device][k] || k;
-G.keys = (s) => s.replace(/\[(a|b|x|y|start|move|s)\]/g, (_, k) => G.btn(k));
+G.keys = (s) => s.replace(/\[(a|b|x|y|j|start|move|s)\]/g, (_, k) => G.btn(k));
 
 let padLB = false;
 G.pollInput = () => {
@@ -75,7 +75,7 @@ G.pollInput = () => {
     // con LB pulsado, A B X Y = habilidades 1 2 3 4, RB = 5
     padLB = b(4);
     if (padLB) { pad.s1 = b(0); pad.s2 = b(1); pad.s3 = b(2); pad.s4 = b(3); pad.s5 = b(5); }
-    else { pad.a = b(0); pad.b = b(1); pad.y = b(3); pad.x = b(5) || b(2) || b(7); }
+    else { pad.a = b(0); pad.b = b(1); pad.y = b(3); pad.j = b(2); pad.x = b(5) || b(7); }
     pad.start = pad.start || b(9);
     pad.up = pad.up || b(12) || ax[1] < -0.45;
     pad.down = pad.down || b(13) || ax[1] > 0.45;
@@ -100,5 +100,7 @@ G.pollInput = () => {
 };
 G.dir = { x: 0, y: 0 };
 G.pressed = (k) => inp.pressed[k];
+// confirmar en menús y diálogos: A o también la tecla de salto (Espacio)
+G.ok = () => inp.pressed.a || inp.pressed.j;
 G.held = (k) => inp.held[k];
 G.consume = () => { for (const k of BTNS) inp.pressed[k] = false; };

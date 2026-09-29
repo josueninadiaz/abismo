@@ -52,10 +52,10 @@
     if (d.n < d.total) {
       d.n += d.o.slow ? 0.5 : 1.2;
       if (Math.floor(d.n) % 3 === 0) G.audio.sfx('blip');
-      if (d.t > 2 && (G.pressed('a') || G.pressed('b') || fast)) { d.n = d.total; d.full = d.t; }
+      if (d.t > 2 && (G.ok() || G.pressed('b') || fast)) { d.n = d.total; d.full = d.t; }
     } else {
       if (d.full == null) d.full = d.t;
-      if (!d.o.keep && (G.pressed('a') || (fast && d.t - d.full > 4))) { d.done = true; dlg = null; G.audio.sfx('move'); return; }
+      if (!d.o.keep && (G.ok() || (fast && d.t - d.full > 4))) { d.done = true; dlg = null; G.audio.sfx('move'); return; }
     }
     const x = 36, y = G.mode === 'combat' ? 62 : 194, w = 408, h = 68;
     G.frame(ctx, x, y, w, h);
@@ -91,7 +91,7 @@
     c.t++;
     if (G.pressed('up')) { c.i = (c.i + c.opts.length - 1) % c.opts.length; G.audio.sfx('move'); }
     if (G.pressed('down')) { c.i = (c.i + 1) % c.opts.length; G.audio.sfx('move'); }
-    if (c.t > 8 && G.pressed('a')) { c.done = true; c.value = c.i; choice = null; G.audio.sfx('ok'); return; }
+    if (c.t > 8 && G.ok()) { c.done = true; c.value = c.i; choice = null; G.audio.sfx('ok'); return; }
     const w = Math.max(...c.opts.map((o) => G.textW(o))) + 36, h = c.opts.length * 14 + 12;
     const x = 444 - w, y = G.mode === 'combat' ? 136 : 186 - h;
     G.frame(ctx, x, y, w, h);
@@ -109,7 +109,7 @@
     const c = card;
     c.t++;
     const T = 220;
-    if (c.t > 20 && c.t < T - 40 && (G.pressed('a') || G.pressed('b'))) c.t = T - 40;
+    if (c.t > 20 && c.t < T - 40 && (G.ok() || G.pressed('b'))) c.t = T - 40;
     const a = c.t < 40 ? c.t / 40 : c.t > T - 40 ? (T - c.t) / 40 : 1;
     if (c.t >= T) { c.done = true; card = null; return; }
     ctx.globalAlpha = Math.max(0, a);
@@ -141,7 +141,7 @@
     if (n.t > 50 && Math.floor(n.t / 30) % 2) G.textC(ctx, '·', 240, 230, DIM, null);
     G.text(ctx, G.keys('[b]: saltar'), 470 - G.textW(G.keys('[b]: saltar')), 256, '#5a5468', null);
     if (n.t > 5 && (G.pressed('b') || G.pressed('start'))) { n.done = true; narr = null; G.audio.sfx('back'); return; }
-    if (n.t > 20 && (G.pressed('a') || n.t > (n.o.auto || 99999))) {
+    if (n.t > 20 && (G.ok() || n.t > (n.o.auto || 99999))) {
       n.i++; n.t = 0;
       if (n.i >= n.lines.length) { n.done = true; narr = null; }
     }
@@ -168,7 +168,7 @@
     ls.forEach((s, i) => G.textC(ctx, s, 240, 120 - ls.length * 7 + i * 14, '#f6e6c8', '#1a0e04'));
     ctx.globalAlpha = 1;
     if (m.t > 40 && Math.floor(m.t / 30) % 2) G.textC(ctx, '·', 240, 232, GOLD, null);
-    if ((m.t > 25 && G.pressed('a')) || (m.t > 12 && G.held('b'))) { m.i++; m.t = 0; if (m.i >= m.lines.length) { m.done = true; memo = null; } }
+    if ((m.t > 25 && G.ok()) || (m.t > 12 && G.held('b'))) { m.i++; m.t = 0; if (m.i >= m.lines.length) { m.done = true; memo = null; } }
   }
 
   // ── avisos ──
@@ -255,7 +255,7 @@
       if (G.pressed('up')) { m.i = (m.i + MAIN.length - 1) % MAIN.length; G.audio.sfx('move'); }
       if (G.pressed('down')) { m.i = (m.i + 1) % MAIN.length; G.audio.sfx('move'); }
       if (G.pressed('b') || G.pressed('start')) return back();
-      if (G.pressed('a') && m.t > 5) {
+      if (G.ok() && m.t > 5) {
         G.audio.sfx('ok');
         if (m.i === 0) { menu = null; return; }
         if (m.i === 5) { menu = null; G.toTitle(); return; }
@@ -307,7 +307,7 @@
     if (G.pressed('up')) { m.j = (m.j + OPTS.length - 1) % OPTS.length; G.audio.sfx('move'); }
     if (G.pressed('down')) { m.j = (m.j + 1) % OPTS.length; G.audio.sfx('move'); }
     const [k] = OPTS[m.j];
-    const dx = G.pressed('right') ? 1 : G.pressed('left') ? -1 : G.pressed('a') ? 1 : 0;
+    const dx = G.pressed('right') ? 1 : G.pressed('left') ? -1 : G.ok() ? 1 : 0;
     if (dx) {
       G.audio.sfx('move');
       if (k === 'quality') { o.quality = (o.quality + dx + 3) % 3; G.R.resize(); }

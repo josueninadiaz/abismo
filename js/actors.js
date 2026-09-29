@@ -14,8 +14,10 @@
       right: frames.side.walk.map(spr),
       idle: { down: frames.down.idle.map(spr), up: frames.up.idle.map(spr), right: frames.side.idle.map(spr) },
     };
+    set.jump = { down: frames.down.jump.map(spr), up: frames.up.jump.map(spr), right: frames.side.jump.map(spr) };
     set.left = set.right.map(G.flipSpr);
     set.idle.left = set.idle.right.map(G.flipSpr);
+    set.jump.left = set.jump.right.map(G.flipSpr);
     G.SPR[name] = set;
     return set;
   }

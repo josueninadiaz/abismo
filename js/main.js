@@ -37,7 +37,7 @@
     if (T.leaving) return;
     if (G.UI.menuOpen()) return;
     if (T.stage === 'press') {
-      if (G.pressed('a') || G.pressed('start')) { G.audio.unlock(); G.audio.play('title'); G.audio.sfx('ok'); T.stage = 'menu'; T.items = titleItems(); }
+      if (G.ok() || G.pressed('start')) { G.audio.unlock(); G.audio.play('title'); G.audio.sfx('ok'); T.stage = 'menu'; T.items = titleItems(); }
       return;
     }
     if (T.stage === 'plantas') {
@@ -45,7 +45,7 @@
       if (G.pressed('up')) { T.j = (T.j + L.length - 1) % L.length; G.audio.sfx('move'); }
       if (G.pressed('down')) { T.j = (T.j + 1) % L.length; G.audio.sfx('move'); }
       if (G.pressed('b')) { T.stage = 'menu'; G.audio.sfx('back'); }
-      if (G.pressed('a')) {
+      if (G.ok()) {
         const p = G.PLANTS.find((q) => q.id === L[T.j]);
         const s = G.readSave() || G.newSave();
         Object.assign(s, { zone: p.zone, x: p.x, y: p.y + 1 });
@@ -55,7 +55,7 @@
     }
     if (G.pressed('up')) { T.i = (T.i + T.items.length - 1) % T.items.length; G.audio.sfx('move'); }
     if (G.pressed('down')) { T.i = (T.i + 1) % T.items.length; G.audio.sfx('move'); }
-    if (G.pressed('a')) {
+    if (G.ok()) {
       const id = T.items[T.i][1];
       G.audio.sfx('ok');
       if (id === 'nueva') start(null);

@@ -203,7 +203,7 @@
   CB.start = (id, done) => {
     def = FIGHTS[id]; onEnd = done;
     CB.active = true; CB.id = id; CB.finished = false;
-    P = { x: 70, face: 1, hp: 5, max: 5, inv: 0, st: 'idle', t: 0, anim: 0, cd: {}, dcd: 0, kx: 0, skill: null, aura: 0 };
+    P = { x: 70, face: 1, hp: 5, max: 5, inv: 0, st: 'idle', t: 0, anim: 0, cd: {}, dcd: 0, kx: 0, skill: null, aura: 0, jy: 0, vy: 0 };
     E = { x: 250, face: -1, st: 'idle', t: 0, next: 90, atk: null, res: 0, stun: 0, hit: 0, crystals: def.crystals, pose: { t: 0, arm: 0, crouch: 0, lean: 0 }, vx: 0, bark: 0 };
     fx = []; shots = []; hazards = []; floats = []; barks = [];
     phase = 0; tut = id === 'tharn' && !G.flag('tut_combate');
@@ -230,6 +230,10 @@
     if (P.dcd > 0) P.dcd--;
     for (const k in P.cd) if (P.cd[k] > 0) P.cd[k]--;
     P.x += P.kx; P.kx *= 0.85;
+    if (P.jy > 0 || P.vy > 0) {
+      P.jy += P.vy; P.vy -= 0.22;
+      if (P.jy <= 0) { P.jy = 0; P.vy = 0; burst(P.x, FLOOR - 1, '#8a7080', 5); G.audio.sfx('land'); }
+    }
     if (P.st === 'down') return;
     if (P.st === 'hurt') { if (P.t > 22) setP('idle'); return; }
     if (P.st === 'dodge') {
@@ -249,6 +253,7 @@
       setP('dodge'); P.ddir = Math.abs(d) > 0.2 ? Math.sign(d) : -P.face; P.inv = 15; P.dcd = 34; G.audio.sfx('dodge');
       return;
     }
+    if (G.pressed('j') && P.jy === 0) { P.vy = 3.3; P.jy = 0.1; G.audio.sfx('jump'); }
     if (G.pressed('a')) return useSkill('golpe');
     for (let i = 0; i < 5; i++) if (G.pressed('s' + (i + 1))) return useSkill(ORDER[i]);
     // Y / Q: usa la habilidad del sello actual (atajo cómodo en móvil y mando)
@@ -412,7 +417,7 @@
         if (t < W) { pose.crouch = G.lerp(pose.crouch, 1, 0.1); pose.lean = 0.4; if (t % 4 === 0) fx.push({ x: E.x - a.dir * 10, y: FLOOR - 2, vx: -a.dir * G.rnd(0.5, 1.5), vy: -G.rnd(0.2, 0.8), life: 20, col: '#6a5a60', s: 2 }); }
         else if (t < W + 60) {
           E.x += a.dir * 5; pose.crouch = 0.6; pose.lean = 1;
-          if (Math.abs(P.x - E.x) < 20) hurtP(1, E.x - a.dir * 20);
+          if (Math.abs(P.x - E.x) < 20 && P.jy < 14) hurtP(1, E.x - a.dir * 20);
           if (E.x < 40 || E.x > CW - 40) { E.x = G.clamp(E.x, 40, CW - 40); G.shake = 4; G.audio.sfx('boom'); a.t = W + 60; }
         } else if (t > W + 100) done();
         else { pose.crouch = G.lerp(pose.crouch, 0.8, 0.1); pose.lean = G.lerp(pose.lean, 0, 0.1); }
@@ -423,7 +428,7 @@
         if (t === 1) { G.audio.sfx('warn'); a.hz = { kind: 'circulo', x: P.x, w: 20, t: 0, n: W, track: S(30), col: a.kind === 'agarre' ? '#c8a0ff' : '#ff5a78' }; hazards.push(a.hz); }
         pose.arm = G.lerp(pose.arm, t < W ? 0.7 : 0, 0.1);
         if (t === W) { a.hz.boom = 22; G.audio.sfx('crystal'); G.shake = 2; }
-        if (t >= W && t < W + 18 && Math.abs(P.x - a.hz.x) < 20) hurtP(1, a.hz.x);
+        if (t >= W && t < W + 18 && Math.abs(P.x - a.hz.x) < 20 && P.jy < 17) hurtP(1, a.hz.x);
         if (t > W + 40) done();
         break;
       }
@@ -481,14 +486,14 @@
         if (s.y > FLOOR - 4) { s.life = 0; burst(s.x, FLOOR - 4, '#ff8a9a', 8); G.audio.sfx('crystal'); if (Math.abs(P.x - s.x) < 14) hurtP(1, s.x); }
         else if (Math.abs(P.x - s.x) < 8 && s.y > FLOOR - 36) hurtP(1, s.x);
       } else if (s.kind === 'eco') {
-        const dx = P.x - s.x, dy = FLOOR - 22 - s.y, l = Math.hypot(dx, dy) || 1;
+        const dx = P.x - s.x, dy = FLOOR - 22 - P.jy - s.y, l = Math.hypot(dx, dy) || 1;
         s.vx += dx / l * 0.03; s.vy += dy / l * 0.03; s.vx *= 0.985; s.vy *= 0.985;
         s.x += s.vx; s.y += s.vy;
         if (l < 9) { hurtP(1, s.x); s.life = 0; }
         if (P.st === 'act' && P.skill === 'golpe' && P.t >= 7 && P.t < 12 && Math.abs(s.x - (P.x + P.face * 16)) < 16 && Math.abs(s.y - (FLOOR - 22)) < 20) { s.life = 0; burst(s.x, s.y, '#ffd070', 8); G.audio.sfx('block'); }
       } else if (s.kind === 'ola') {
         s.x += s.vx;
-        if (Math.abs(P.x - s.x) < 8) hurtP(1, s.x - s.vx * 4);
+        if (Math.abs(P.x - s.x) < 8 && P.jy < 12) hurtP(1, s.x - s.vx * 4);
         if (s.x < 0 || s.x > CW) s.life = 0;
       }
       if (s.life <= 0) shots.splice(i, 1);
@@ -621,7 +626,8 @@
     for (const h of hazards) drawHazard(h);
     // sombras
     g.fillStyle = 'rgba(0,0,0,0.45)';
-    g.fillRect(Math.round(P.x - 8), FLOOR - 1, 16, 2);
+    const sw = Math.max(6, Math.round(16 - P.jy * 0.4));
+    g.fillRect(Math.round(P.x - sw / 2), FLOOR - 1, sw, 2);
     if (E.st !== 'gone') g.fillRect(Math.round(E.x - 18), FLOOR - 1, 36, 2);
     // enemigo
     const rig = RIG[def.rig];
@@ -683,14 +689,15 @@
       if (t < D.wind) return { f: pick('raise', t >> 3) };
       return { f: pick(P.skill === 'cuerpo' ? 'strike' : 'cast', P.skill === 'cuerpo' ? 0 : t >> 2) };
     }
+    if (P.jy > 0) return { f: pick('jump', P.vy > 0 ? 0 : 1) };
     if (P.moving) return { f: pick('walk', Math.floor(P.anim / 6)) };
     return { f: pick('idle', Math.floor(CB.t / 16)) };
   }
   function blitP(cv, fr, alpha) {
-    const f = fr.f, x = Math.round(P.x), y = FLOOR - f.h;
+    const f = fr.f, x = Math.round(P.x), y = FLOOR - f.h - Math.round(P.jy);
     if (alpha != null) g.globalAlpha = alpha;
     if (fr.rot) {
-      g.save(); g.translate(x, FLOOR - f.h / 2 + 4); g.rotate(fr.rot); g.drawImage(cv, -Math.round(f.w / 2), -Math.round(f.h / 2)); g.restore();
+      g.save(); g.translate(x, y + f.h / 2 + 4); g.rotate(fr.rot); g.drawImage(cv, -Math.round(f.w / 2), -Math.round(f.h / 2)); g.restore();
     } else g.drawImage(cv, x - Math.round(f.w / 2), y);
     g.globalAlpha = 1;
   }
@@ -847,7 +854,7 @@
       } else G.textC(c, '?', x + 13, y + 9, '#5a5060');
       if (keys[i]) G.textC(c, keys[i], x + 13, y - 11, '#9a94a8');
     });
-    if (G.device === 'kb') G.text(c, 'Shift: esquivar', 16, 250, '#9a94a8');
+    if (G.device === 'kb') { G.text(c, 'Shift: esquivar', 16, 238, '#9a94a8'); G.text(c, 'Espacio: saltar', 16, 250, '#9a94a8'); }
     // textos flotantes y frases
     for (const f of floats) {
       const a = Math.min(1, (70 - f.t) / 20);
@@ -871,5 +878,5 @@
   CB.cdFrac = (id) => (P && P.cd[id] > 0 ? P.cd[id] / SKILLDEF[id].cd : 0);
   CB.sealSkill = () => { const s = E && E.seals ? seal() : null; return s ? s.s : null; };
   // para pruebas automáticas
-  CB.debug = { apply: (id) => apply(id), state: () => ({ st, phase, hp: P.hp, seals: E.seals.map((x) => x.s + (x.broken ? '*' : x.hp)) }) };
+  CB.debug = { apply: (id) => apply(id), state: () => ({ st, phase, hp: P.hp, jy: Math.round(P.jy), seals: E.seals.map((x) => x.s + (x.broken ? '*' : x.hp)) }) };
 })();

@@ -11,7 +11,8 @@ Abre `index.html` en el navegador; no necesita servidor, pero la primera vez sí
 | Acción | Teclado | Mando | Móvil |
 |---|---|---|---|
 | Moverse | WASD / flechas | Stick / cruceta | Joystick |
-| Hablar / examinar / golpe | Z · Espacio · Enter | A | A |
+| Hablar / examinar / golpe | Z · Enter | A | A |
+| Saltar | Espacio | X | SALTO |
 | Volver / menú | X · Esc | B · Start | B · ≡ |
 | Esquivar (combate) | Shift · C | RB | ESQ |
 | Habilidades (combate) | 1 2 3 4 5 | LB + A B X Y RB | Botones |
