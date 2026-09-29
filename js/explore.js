@@ -12,8 +12,9 @@
       this.y = 0; this.dir = o.dir || 'down'; this.anim = 0; this.moving = false;
       this.home = { x: this.x, z: this.z }; this.wait = G.ri(60, 200); this.goal = null;
       this.r = o.scale ? 7 : 5;
+      this.phase = G.ri(0, 200);
       const set = G.SPR[spr];
-      this.bb = G.W3.billboard(set.down[0], { scale: o.scale || 1, glow: o.glow });
+      this.bb = G.W3.billboard((set.idle ? set.idle.down : set.down)[0], { scale: o.scale || 1, glow: o.glow });
       if (o.ghost) {
         const m = this.bb.mat;
         m.transparent = true; m.opacity = 0.7; m.alphaTest = 0.1; m.depthWrite = false;
@@ -22,10 +23,13 @@
       }
       G.W3.zone().root.add(this.bb.root);
     }
+    // caminando: 6 pasos; quieto: respira, mece la cola y parpadea (cada uno a su ritmo)
     frame() {
       const set = G.SPR[this.spr];
-      const fr = set[this.dir] || set.down;
-      return fr[this.moving ? Math.floor(this.anim / 9) % 4 : 0];
+      if (this.moving) { const fr = set[this.dir] || set.down; return fr[Math.floor(this.anim / 6) % fr.length]; }
+      const idle = set.idle && set.idle[this.dir];
+      if (idle) return idle[Math.floor((G.t + this.phase) / 15) % idle.length];
+      return (set[this.dir] || set.down)[0];
     }
     face(dir) { this.dir = dir; }
     faceTo(x, z) {

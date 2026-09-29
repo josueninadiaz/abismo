@@ -671,29 +671,42 @@
     g.drawImage(tmpA, -60, -110);
     g.restore();
   }
+  // fotograma del protagonista según lo que esté haciendo (y giro si está rodando)
   function playerFrame() {
-    const set = G.SPR.prota, dir = P.face > 0 ? 'right' : 'left';
-    return set[dir][P.moving && P.st === 'idle' ? Math.floor(P.anim / 8) % 4 : 0];
+    const A = G.SPR.prota_cb, side = P.face > 0 ? 'right' : 'left';
+    const pick = (k, i) => { const l = A[k][side]; return l[((i % l.length) + l.length) % l.length]; };
+    if (P.st === 'dodge') return { f: pick('crouch', 0), rot: (P.t / 16) * Math.PI * 2 * P.ddir };
+    if (P.st === 'hurt') return { f: pick('hurt', 0) };
+    if (P.st === 'act') {
+      const D = SKILLDEF[P.skill], t = P.t;
+      if (P.skill === 'golpe') return { f: pick('strike', t < D.wind ? 0 : 1) };
+      if (t < D.wind) return { f: pick('raise', t >> 3) };
+      return { f: pick(P.skill === 'cuerpo' ? 'strike' : 'cast', P.skill === 'cuerpo' ? 0 : t >> 2) };
+    }
+    if (P.moving) return { f: pick('walk', Math.floor(P.anim / 6)) };
+    return { f: pick('idle', Math.floor(CB.t / 16)) };
+  }
+  function blitP(cv, fr, alpha) {
+    const f = fr.f, x = Math.round(P.x), y = FLOOR - f.h;
+    if (alpha != null) g.globalAlpha = alpha;
+    if (fr.rot) {
+      g.save(); g.translate(x, FLOOR - f.h / 2 + 4); g.rotate(fr.rot); g.drawImage(cv, -Math.round(f.w / 2), -Math.round(f.h / 2)); g.restore();
+    } else g.drawImage(cv, x - Math.round(f.w / 2), y);
+    g.globalAlpha = 1;
   }
   function drawPlayer() {
-    if (P.inv > 0 && P.st !== 'dodge' && Math.floor(P.inv / 3) % 2) return;
-    const f = playerFrame();
-    let x = Math.round(P.x - f.w / 2), y = FLOOR - f.h;
     if (P.st === 'down') { const l = G.SPR.prota_lie; g.drawImage(l.c, Math.round(P.x - l.w / 2), FLOOR - l.h); return; }
-    if (P.st === 'act') {
-      const D = SKILLDEF[P.skill];
-      if (P.t < D.wind) x -= P.face * (P.t % 2); // tiembla al concentrarse
-      else if (P.t < D.wind + 4) x += P.face * 3;
-    }
-    if (P.st === 'dodge') { g.globalAlpha = 0.85; }
-    g.drawImage(f.c, x, y);
-    g.globalAlpha = 1;
-    if (P.st === 'hurt' && P.t < 6) { g.globalCompositeOperation = 'lighter'; g.drawImage(G.tint(f.c, '#ff4a5a'), x, y); g.globalCompositeOperation = 'source-over'; }
+    if (P.inv > 0 && P.st !== 'dodge' && Math.floor(P.inv / 3) % 2) return;
+    const fr = playerFrame();
+    // tiembla un poco mientras se concentra
+    if (P.st === 'act' && P.skill !== 'golpe' && P.t < SKILLDEF[P.skill].wind && P.t % 4 < 2) { const k = P.x; P.x += P.face > 0 ? -1 : 1; blitP(fr.f.c, fr); P.x = k; }
+    else blitP(fr.f.c, fr);
+    if (P.st === 'hurt' && P.t < 6) { g.globalCompositeOperation = 'lighter'; blitP(G.tint(fr.f.c, '#ff4a5a'), fr); g.globalCompositeOperation = 'source-over'; }
   }
   function drawPlayerGlow() {
-    const f = playerFrame();
     if (P.st === 'down') return;
-    if (f.e) g.drawImage(f.e, Math.round(P.x - f.w / 2), FLOOR - f.h);
+    const fr = playerFrame(), f = fr.f;
+    if (f.e) blitP(f.e, fr);
     // estelas de la esquiva
     for (const e of fx) if (e.ghost) { g.globalAlpha = e.life / 30; g.drawImage(G.tint(f.c, '#3cc4a4'), Math.round(e.x - f.w / 2), FLOOR - f.h); g.globalAlpha = 1; }
     if (P.st !== 'act') return;

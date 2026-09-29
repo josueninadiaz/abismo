@@ -44,53 +44,6 @@ G.overlay = (rows, pts) => {
   for (const [x, y, ch] of pts) if (out[y] && x >= 0 && x < out[y].length) out[y][x] = ch;
   return out.map((r) => r.join(''));
 };
-// intercambia letras (p. ej. el pelaje de otro color)
-G.swap = (rows, map) => rows.map((r) => r.replace(/./g, (ch) => (map[ch] != null ? map[ch] : ch)));
-function shiftCols(row, x0, x1, dx) {
-  const a = row.split(''), seg = a.slice(x0, x1);
-  for (let i = x0; i < x1; i++) a[i] = '.';
-  seg.forEach((ch, i) => { const k = x0 + i + dx; if (ch !== '.' && k >= 0 && k < a.length) a[k] = ch; });
-  return a.join('');
-}
-// cuatro fotogramas de caminar a partir del sprite quieto:
-// de frente/espalda se levanta un pie y luego el otro; de perfil las piernas se abren
-G.walkFrames = (rows, legY, splitX, side) => {
-  const W = rows[0].length, blank = '.'.repeat(W);
-  const lift = (left) => {
-    const out = rows.slice();
-    const x0 = left ? 0 : splitX, x1 = left ? splitX : W;
-    for (let y = legY; y < rows.length; y++) {
-      const below = y + 1 < rows.length ? rows[y + 1] : blank;
-      const a = out[y].split('');
-      for (let x = x0; x < x1; x++) a[x] = below[x];
-      out[y] = a.join('');
-    }
-    return out;
-  };
-  const stride = (dir) => rows.map((r, y) => {
-    if (y < legY) return r;
-    const k = y - legY + 1, d = k > 2 ? dir : 0;
-    let s = shiftCols(r, splitX, W, d);
-    return shiftCols(s, 0, splitX, -d);
-  });
-  const bob = (rs) => rs.slice(1).concat([blank]);
-  if (side) return [rows, bob(stride(1)), rows, bob(stride(-1))];
-  return [rows, bob(lift(true)), rows, bob(lift(false))];
-};
-
-// registra un personaje con sus tres vistas y cuatro fotogramas: G.SPR[name] = {down:[..], up:[..], right:[..], left:[..]}
-G.makeActor = (name, views, pal) => {
-  const set = {};
-  for (const dir of ['down', 'up', 'side']) {
-    const v = views[dir];
-    const fr = G.walkFrames(v.rows, v.legY, v.split, dir === 'side').map((rs) => G.sprite(rs, pal));
-    if (dir === 'side') { set.right = fr; set.left = fr.map(G.flipSpr); }
-    else set[dir] = fr;
-  }
-  G.SPR[name] = set;
-  return set;
-};
-
 // ── imagen suelta ──
 G.makeStatic = (name, art) => (G.SPR[name] = G.sprite(art.rows, art.pal));
 

@@ -1,65 +1,62 @@
 'use strict';
-// ─── Personajes: el protagonista y los habitantes del Abismo (variantes de color con marcas) ───
+// ─── Personajes: el protagonista y los habitantes del Abismo ───
+// Todos salen del mismo esqueleto de piezas (js/prota.js): los habitantes son el mismo pueblo,
+// con otros colores, las marcas que el protagonista no tiene y, si están infectados, cristales del pilar.
 (function () {
   const A = G.ART;
-  const VIEWS = {
-    down: { rows: A.prota_down.rows, legY: 31, split: 10 },
-    up: { rows: A.prota_up.rows, legY: 32, split: 10 },
-    side: { rows: A.prota_side.rows, legY: 32, split: 10 },
-  };
-  G.makeActor('prota', VIEWS, G.PAL_PROTA);
+  const BASE = G.PROTA.PAL;
 
-  // posiciones de las marcas en cada vista (frente, espalda, perfil)
-  const MARKS = {
-    down: [[10, 6], [11, 6], [10, 7], [11, 7], [5, 13], [6, 14], [15, 13], [14, 14], [2, 22], [2, 23], [2, 24], [18, 22], [18, 23], [18, 24]],
-    up: [[10, 8], [11, 8], [10, 9], [11, 9], [9, 11], [12, 11], [2, 22], [2, 23], [2, 24], [17, 22], [17, 23], [17, 24]],
-    side: [[11, 7], [12, 7], [11, 8], [13, 13], [12, 14], [7, 22], [7, 23], [7, 24]],
-  };
-  // cristales del pilar sobre los hombros de los infectados
-  const CRYST = {
-    down: [[3, 17], [2, 18], [3, 18], [18, 17], [18, 18], [19, 18], [4, 16]],
-    up: [[3, 17], [2, 18], [3, 18], [17, 17], [17, 18], [18, 18]],
-    side: [[2, 17], [3, 17], [2, 16], [1, 18], [4, 16]],
-  };
-  // variantes: colores del pelaje, la cara, la ropa y las marcas
-  function variant(name, o) {
-    const pal = Object.assign({}, G.PAL_PROTA, o.pal || {});
-    const views = {};
-    for (const dir of ['down', 'up', 'side']) {
-      let rows = VIEWS[dir].rows;
-      if (o.marks !== false) rows = G.overlay(rows, MARKS[dir].map(([x, y]) => [x, y, 'x']));
-      if (o.crystals) rows = G.overlay(rows, CRYST[dir].map(([x, y], i) => [x, y, i % 3 ? 'X' : 'E']));
-      views[dir] = Object.assign({}, VIEWS[dir], { rows });
-    }
-    return G.makeActor(name, views, pal);
+  // G.SPR[name] = { down, up, right, left: [caminar ×6], idle: { down, up, right, left: [quieto ×8] }, cb: {…combate} }
+  function makeSet(name, frames, pal) {
+    const spr = (rows) => G.sprite(rows, pal);
+    const set = {
+      down: frames.down.walk.map(spr), up: frames.up.walk.map(spr),
+      right: frames.side.walk.map(spr),
+      idle: { down: frames.down.idle.map(spr), up: frames.up.idle.map(spr), right: frames.side.idle.map(spr) },
+    };
+    set.left = set.right.map(G.flipSpr);
+    set.idle.left = set.idle.right.map(G.flipSpr);
+    G.SPR[name] = set;
+    return set;
   }
-  const INFECT = { c: '#ff5a6a', C: '#b02a44', X: '#ff8a9a', E: '#ffd0da' };
+  makeSet('prota', G.PROTA, BASE);
+  // animaciones de combate del protagonista (mirando a la derecha; la izquierda es su espejo)
+  G.SPR.prota_cb = {};
+  for (const k in G.PROTA.combat) {
+    const r = G.PROTA.combat[k].map((rows) => G.sprite(rows, BASE));
+    G.SPR.prota_cb[k] = { right: r, left: r.map(G.flipSpr) };
+  }
+
+  const MARKED = G.PROTA.build({ marks: true });
+  const INFECTED = G.PROTA.build({ marks: true, crystals: true });
+  const variant = (name, o) => makeSet(name, o.crystals ? INFECTED : o.marks === false ? G.PROTA : MARKED, Object.assign({}, BASE, o.pal));
+  const INFECT = { c: '#ff5a6a', C: '#b02a44', M: '#6a1a2a', X: '#ff8a9a', E: '#ffd0da', e: '#ffd0d8' };
 
   // Mira: joven de la tribu, curiosa; marcas azules
-  variant('mira', { pal: { n: '#2a2a44', d: '#3a3a5e', t: '#56548a', T: '#7a78b0', y: '#b8a6d8', b: '#8a78b0', B: '#5e4e84', x: '#7ac8ff', p: '#6a4a6a' } });
+  variant('mira', { pal: { k: '#2a2a44', r: '#222238', d: '#3a3a5e', t: '#56548a', T: '#7a78b0', h: '#b8a6d8', b: '#8a78b0', B: '#5e4e84', x: '#7ac8ff' } });
   // la anciana Suen: pelaje gris, ropa parda, marcas ámbar
-  variant('suen', { pal: { n: '#3a3a40', d: '#4a4a52', t: '#6a5a48', T: '#8a7a62', w: '#e6e0d6', W: '#b8b0a4', y: '#d8c8a0', b: '#a89878', B: '#786848', x: '#ffc86a', c: '#ffe8a0', C: '#c8a060' } });
+  variant('suen', { pal: { k: '#3a3a40', r: '#2e2e34', d: '#4a4a52', t: '#6a5a48', T: '#8a7a62', w: '#e6e0d6', W: '#cfc8bc', h: '#d8c8a0', b: '#a89878', B: '#786848', x: '#ffc86a', c: '#ffe8a0', C: '#c8a060', M: '#8a7040' } });
   // habitantes
-  variant('aldeano1', { pal: { n: '#2a2620', d: '#3e3628', t: '#5a4e38', T: '#7a6a4a', x: '#8affc8' } });
-  variant('aldeano2', { pal: { n: '#1a2a24', d: '#26403a', t: '#3a6a58', T: '#5a8a70', y: '#d0c0a0', x: '#c8a0ff' } });
-  variant('guardia', { pal: { n: '#181c24', d: '#262c3a', t: '#3a4458', T: '#56647e', y: '#8a8a9a', b: '#5a5a6a', B: '#3a3a48', x: '#6ae0ff' } });
+  variant('aldeano1', { pal: { k: '#2a2620', r: '#221e1a', d: '#3e3628', t: '#5a4e38', T: '#7a6a4a', x: '#8affc8' } });
+  variant('aldeano2', { pal: { k: '#1a2a24', r: '#14221c', d: '#26403a', t: '#3a6a58', T: '#5a8a70', h: '#d0c0a0', x: '#c8a0ff' } });
+  variant('guardia', { pal: { k: '#181c24', r: '#12161c', d: '#262c3a', t: '#3a4458', T: '#56647e', h: '#8a8a9a', b: '#5a5a6a', B: '#3a3a48', x: '#6ae0ff' } });
   // Varek, el nuevo líder: rojo del pilar en la ropa y marcas que ya se tiñen
-  variant('varek', { crystals: true, pal: Object.assign({ n: '#241624', d: '#3a1e34', t: '#5a2a44', T: '#8a3a5a', y: '#e0c8b0', b: '#a0303e', B: '#6a1a2a', x: '#ff6a8a' }, { X: '#ff8a9a', E: '#ffd0da' }) });
+  variant('varek', { crystals: true, pal: { k: '#241624', r: '#1c101c', d: '#3a1e34', t: '#5a2a44', T: '#8a3a5a', h: '#e0c8b0', b: '#a0303e', B: '#6a1a2a', x: '#ff6a8a', X: '#ff8a9a', E: '#ffd0da' } });
   // habitante infectado: ojos y marcas rojos, cristales en los hombros
-  variant('infectado', { crystals: true, pal: Object.assign({ n: '#221a22', d: '#322630', t: '#4a3440', T: '#6a4a58', w: '#d8ccd0', W: '#a898a0', x: '#ff4a5a' }, INFECT) });
+  variant('infectado', { crystals: true, pal: Object.assign({ k: '#221a22', r: '#1a141a', d: '#322630', t: '#4a3440', T: '#6a4a58', w: '#d8ccd0', W: '#c0b4b8', x: '#ff4a5a' }, INFECT) });
   // Oren, el antiguo líder: capa clara, cubierto de cuarzo
-  const OREN = { n: '#2a2e3a', d: '#3a4050', t: '#6a6270', T: '#9a90a0', w: '#f0ece6', y: '#e8dcc0', b: '#c0a870', B: '#8a7440', x: '#ffd890' };
+  const OREN = { k: '#2a2e3a', r: '#22262e', d: '#3a4050', t: '#6a6270', T: '#9a90a0', w: '#f0ece6', h: '#e8dcc0', b: '#c0a870', B: '#8a7440', x: '#ffd890' };
   variant('oren', { crystals: true, pal: Object.assign({}, OREN, INFECT, { x: '#ff4a5a' }) });
-  variant('oren_libre', { pal: Object.assign({}, OREN, { c: '#ffe8a0', C: '#c8a060' }) });
+  variant('oren_libre', { pal: Object.assign({}, OREN, { c: '#ffe8a0', C: '#c8a060', M: '#8a7040' }) });
   // Tharn, guardián del Claro: armadura de bronce oscuro
-  const THARN = { n: '#1c1e28', d: '#2a2c3a', t: '#4a4034', T: '#6a5a44', y: '#b89a6a', b: '#8a6a3a', B: '#5a4424', w: '#dcd6cc', W: '#a8a098' };
+  const THARN = { k: '#1c1e28', r: '#16181f', d: '#2a2c3a', t: '#4a4034', T: '#6a5a44', h: '#b89a6a', b: '#8a6a3a', B: '#5a4424', w: '#dcd6cc', W: '#c4beb4' };
   variant('tharn', { crystals: true, pal: Object.assign({}, THARN, INFECT, { x: '#ff4a5a' }) });
   variant('tharn_libre', { pal: Object.assign({}, THARN, { x: '#6affd0' }) });
   // eco de un alma antigua: pálida, casi transparente
-  variant('alma', { pal: { k: '#6a80a8', n: '#a8c0e0', d: '#bcd0ec', t: '#d0e0f6', T: '#e8f0ff', w: '#ffffff', W: '#e0eaf6', g: '#c0d0e0', y: '#f0f4ff', b: '#d0dcf0', B: '#b0c0dc', p: '#c0cce0', c: '#ffffff', C: '#e0f0ff', x: '#ffe8a0' } });
+  variant('alma', { pal: { K: '#8aa0c8', k: '#a8c0e0', r: '#9ab0d0', d: '#bcd0ec', t: '#d0e0f6', T: '#e8f0ff', w: '#ffffff', W: '#e0eaf6', s: '#d0dcea', S: '#b0c0d8', n: '#8aa0c8', h: '#f0f4ff', b: '#d0dcf0', B: '#b0c0dc', c: '#ffffff', C: '#e0f0ff', M: '#c0d8f0', x: '#ffe8a0', e: '#ffffff' } });
 
-  // el protagonista tumbado (al despertar)
-  const lie = G.SPR.prota.right[0];
+  // el protagonista tumbado (al despertar y al caer en combate)
+  const lie = G.SPR.prota.idle.right[0];
   const rot = (cv) => {
     if (!cv) return null;
     const c = G.makeCanvas(cv.height, cv.width), x = c.getContext('2d');
