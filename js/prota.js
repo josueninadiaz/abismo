@@ -142,6 +142,10 @@
     armB_s: ['rrr', 'rrr', 'rrr', 'rrr', 'rrr', 'rrr', 'CCC', 'BbB', '.b.'],
     armUp_s: ['kkkkkCCh.', 'kdkkkCChh', '.......h.'], // brazo extendido hacia delante (lanzar, golpear)
     armRaise_s: ['..hh', '..hC', '..CC', '.kk.', '.kk.', 'kdk.', 'kk..'], // brazo en alto delante de la cara (concentración)
+    armUpB_s: ['rrrrrMMb.', 'rrrrrMMbb'], // puñetazo con el otro brazo
+    armGuard_s: ['CCh', 'kCC', 'kk.', 'kdk', '.kk'], // guardia: antebrazo delante de la cara
+    legKick_s: ['kkkk....', 'kkkkkkCC', '..kkkkCC'], // patada alta hacia delante
+    legSweep_s: ['kkkkkkkCC', '.kkkkkkCC'], // barrido a ras de suelo
     legF_s: ['kkk', 'kkk', 'kkk', 'CCCC'],
     legB_s: ['rrr', 'rrr', 'rrr', 'MMMM'],
     tail_s: [
@@ -234,12 +238,16 @@
     stamp(g, P.tail_s, OX - 2 + (o.tx || 0), OY + 18 + by + (o.ty || 0));
     stamp(g, P.armB_s, OX + 6 + (o.ab ? o.ab[0] : 0), OY + 13 + by + (o.ab ? o.ab[1] : 0));
     stamp(g, P.legB_s, OX + 6 + (o.lb ? o.lb[0] : 0), OY + 26 + (o.lb ? o.lb[1] : 0));
-    stamp(g, P.legF_s, OX + 5 + (o.lf ? o.lf[0] : 0), OY + 26 + (o.lf ? o.lf[1] : 0));
+    if (!o.leg) stamp(g, P.legF_s, OX + 5 + (o.lf ? o.lf[0] : 0), OY + 26 + (o.lf ? o.lf[1] : 0));
     stamp(g, P.body_s, OX + ln, OY + 11 + by);
+    if (o.leg === 'kick') stamp(g, P.legKick_s, OX + 9 + ln, OY + 21 + by);
+    else if (o.leg === 'sweep') stamp(g, P.legSweep_s, OX + 9, OY + 28);
     if (o.arm === 'up') stamp(g, P.armUp_s, OX + 7 + ln, OY + 15 + by);
+    else if (o.arm === 'upB') { stamp(g, P.armUpB_s, OX + 7 + ln, OY + 15 + by); stamp(g, P.armF_s, OX + 3 + ln, OY + 13 + by); }
     else if (!o.arm) stamp(g, P.armF_s, OX + 5 + ln + (o.af ? o.af[0] : 0), OY + 13 + by + (o.af ? o.af[1] : 0));
     stamp(g, P.head_s, OX + ln, OY + hy);
     if (o.arm === 'raise') stamp(g, P.armRaise_s, OX + 11 + ln, OY + 7 + by);
+    if (o.arm === 'guard') stamp(g, P.armGuard_s, OX + 10 + ln, OY + 9 + by);
     if (o.ear) pts(g, P.ear_s, OX + ln, OY + hy);
     if (o.blink) pts(g, P.blink_s, OX + ln, OY + hy);
     return finish(g);
@@ -291,6 +299,17 @@
     hurt: [poseS({ lean: -1, af: [-2, -1], ab: [-2, -1], blink: true, tx: 1, ty: -1, by: 1 })],
     crouch: [poseS({ by: 3, hy: 1, lf: [1, -1], lb: [-1, -1], af: [1, -2], tx: 1, ear: true })],
     jump: jumpS,
+    // lucha: guardia, puños, gancho, patadas, barrido, aire, derribo, victoria
+    guard: [poseS({ arm: 'guard', lean: -1, lf: [1, 0], lb: [-2, 0], tx: 1 })],
+    cguard: [poseS({ arm: 'guard', by: 3, hy: 1, lf: [1, -1], lb: [-1, -1], tx: 1 })],
+    jab1: [poseS({ arm: 'up', lean: 1, lf: [2, 0], lb: [-2, 0], tx: -1 })],
+    jab2: [poseS({ arm: 'upB', lean: 1, lf: [2, 0], lb: [-2, 0], tx: -1 })],
+    gancho: [poseS({ arm: 'raise', lean: 1, by: -1, lf: [1, -1], lb: [-2, 0], tx: -2, ty: -1, ear: true })],
+    kick: [poseS({ leg: 'kick', lean: -1, lb: [-1, 0], af: [-1, -1], tx: 1, ty: 1 })],
+    sweep: [poseS({ leg: 'sweep', by: 4, hy: 1, lb: [-2, -1], af: [0, -2], tx: 2, ty: 2 })],
+    airkick: [poseS({ leg: 'kick', by: -1, lean: -1, lb: [-1, -3], af: [-1, -2], tx: 1, ty: -2, ear: true })],
+    dash: [poseS({ lean: 2, lf: [3, -1], lb: [-3, 0], af: [-2, 0], tx: -3, ty: -1, ear: true })],
+    win: [poseS({ arm: 'raise', hy: -1, ear: true, tx: -1, ty: -2 }), poseS({ arm: 'raise', ear: false, tx: 1, ty: -1 })],
   };
 
   return {

@@ -259,11 +259,12 @@
 
   // ── escenas dentro de los combates ──
   S.tutorial_combate = function* () {
-    yield say('yo', 'Hay algo pegado a él. Como sellos de cristal sobre su mente y su cuerpo.');
-    yield say(null, G.keys('[a]: golpe (aturde si llenas su Resistencia)   [x]: esquivar (eres intocable mientras ruedas)'));
-    yield say(null, G.keys('[j]: saltar. Sirve para pasar por encima de las ondas del suelo y las embestidas.'));
-    yield say(null, G.keys('Las habilidades rompen los sellos: [s] (o [y] para usar la que pide el sello actual).'));
-    yield say(null, 'Cada sello solo cede ante una habilidad. Si está aturdido, cede antes.');
+    yield say('yo', 'Hay algo pegado a él. Como sellos de cristal sobre su mente.');
+    yield say(null, 'La barra roja de la derecha es su Corrupción. Bájala a cero y quedará en trance.');
+    yield say(null, G.keys('[a]: puño (púlsalo seguido y encadenas tres golpes)   [b]: patada   ↓ + [a]: barrido'));
+    yield say(null, G.keys('[j] o ↑: saltar (en el aire, [a]: patada aérea)   mantén ←: bloquear   [x]: rodar'));
+    yield say(null, G.keys('Tus habilidades son golpes especiales: [s]. También con giros: ↓→ + [a] = Mente.'));
+    yield say(null, 'Cuando esté en trance, ¡PURIFÍCALO! con la habilidad de su sello (el medallón de arriba).');
   };
   S.cb_tharn = (phase, last) => (function* () {
     if (!last) {

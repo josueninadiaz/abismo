@@ -87,6 +87,8 @@
     root.style.display = show ? 'block' : 'none';
     skills.style.display = combat ? 'flex' : 'none';
     bX.style.display = combat ? '' : 'none';
+    bA.textContent = combat ? 'PUÑO' : 'A'; bB.textContent = combat ? 'PATADA' : 'B';
+    bA.style.fontSize = combat ? '13px' : ''; bB.style.fontSize = combat ? '11px' : '';
     SK.forEach(([, , ], i) => { sBtns[i].style.display = G.save && G.save.skills.includes(['mente', 'recuerdos', 'cuerpo', 'alma', 'ser'][i]) ? '' : 'none'; });
   };
   TU.sync();

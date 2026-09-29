@@ -20,10 +20,15 @@ Abre `index.html` en el navegador; no necesita servidor, pero la primera vez sí
 
 ## El combate
 
-El protagonista no mata: purifica. Cada infectado lleva **sellos** del pilar, y cada sello solo cede ante su habilidad: **Mente**, **Recuerdos**, **Cuerpo**, **Alma** o **Ser**. El golpe físico llena la **Resistencia** del enemigo hasta aturdirlo, y aturdido cede antes. Los ataques enemigos se ven venir (avisos en el suelo, columnas de luz, círculos de runas), y la esquiva te hace intocable mientras ruedas. Entre fases se habla. Si caes, la pelea se repite desde la fase en la que estabas.
+Lucha lateral en 2D al estilo de los juegos de pelea (*Mortal Kombat*, *Street Fighter*), con cámara que sigue a los dos luchadores. El protagonista no mata: purifica. Arriba están tu **Luz** y la **Corrupción** del infectado. Cuando la Corrupción llega a cero, queda en trance y sale **¡PURIFÍCALO!**: hay que rematarlo con la habilidad de su sello (el medallón de arriba). Cada ronda es un sello, y entre rondas se habla.
 
-- **Tharn, guardián del Claro**: 2 fases. En la segunda despiertas *Recuerdos*.
-- **Oren, el antiguo líder**: inmune al daño físico. Se le libera con las cinco habilidades en orden, y cada una te devuelve un **fragmento de memoria** (5 en total). Al final cuenta la verdad.
+- **Z** puño: púlsalo seguido y encadenas tres golpes; el tercero es un gancho que lo levanta.
+- **X** patada · **↓ + Z** barrido · **en el aire, Z** patada aérea.
+- **Espacio / ↑** saltar (esquiva ondas del suelo y embestidas) · **Shift** rodar · **mantén ←** (atrás) para bloquear, agachado para los golpes bajos.
+- **Especiales**: botones **1-5**, o giros de joystick: ↓→ + Z = Mente · ↓← + Z = Recuerdos · ←→ + X = Cuerpo · →↓→ + Z = Alma · ↓↓ + X = Ser (necesita la **Resonancia** llena, que se carga golpeando y recibiendo golpes).
+- Congelado breve al impactar, chispas, contador de golpes y barras que bajan con retardo.
+- **Tharn, guardián del Claro**: 2 rondas (Mente y Recuerdos).
+- **Oren, el antiguo líder**: inmune al daño físico; solo le afectan las habilidades. Cinco rondas, una por habilidad, y cada una te devuelve un **fragmento de memoria**. Al final cuenta la verdad.
 
 ## Plantas-alma
 

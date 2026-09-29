@@ -29,8 +29,8 @@
   R.uictx = R.ui.getContext('2d');
   const uiTex = new THREE.CanvasTexture(R.ui);
   uiTex.magFilter = uiTex.minFilter = THREE.NearestFilter; uiTex.generateMipmaps = false;
-  // lienzo del combate / pantallas 2D (320×180)
-  R.flat = G.makeCanvas(320, 180);
+  // lienzo del combate / pantallas 2D (256×144)
+  R.flat = G.makeCanvas(256, 144);
   R.flatctx = R.flat.getContext('2d');
   const flatTex = new THREE.CanvasTexture(R.flat);
   flatTex.magFilter = flatTex.minFilter = THREE.NearestFilter; flatTex.generateMipmaps = false;
@@ -188,7 +188,7 @@
       srcTex = rtScene.texture; depth = rtScene.depthTexture;
     } else {
       flatTex.needsUpdate = true;
-      srcTex = flatTex; sw = 320; sh = 180;
+      srcTex = flatTex; sw = R.flat.width; sh = R.flat.height;
     }
     // desenfoque para la profundidad de campo
     const useDof = src === 'scene' && o.dof && L.dof > 0;
