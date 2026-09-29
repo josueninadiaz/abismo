@@ -159,7 +159,7 @@
         const k = bb.scale;
         mesh.scale.set(s.w * k, s.h * SY * k, 1);
         mesh.position.set(0, (s.h * SY * k) / 2, 0);
-        if (blob) blob.scale.set(Math.max(12, s.w * 0.9) * k, Math.max(6, s.w * 0.45) * k, 1);
+        if (blob) { const bw = Math.min(s.w, 20); blob.scale.set(Math.max(12, bw * 0.9) * k, Math.max(6, bw * 0.45) * k, 1); }
       }
     };
     bb.set(spr);

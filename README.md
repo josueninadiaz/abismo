@@ -54,7 +54,7 @@ js/core.js        utilidades y entrada (teclado, táctil, mando)
 js/font.js        fuente bitmap con tildes, ñ, ¿ y ¡
 js/gfx.js         sprites desde texto, capa emisiva, fotogramas de caminar, marcos
 js/art.js         pixel art: planta-alma, hongos, hierba roja, farol, fauna
-js/prota.js       el protagonista por piezas: caminar ×6, respirar/parpadear ×8 en 3 vistas, poses de combate
+js/prota.js       Soren desde su hoja de sprites (frente, espalda, perfil, agachado) partida en piezas animadas
 js/actors.js      habitantes como variantes del mismo esqueleto (marcas, cristales, colores)
 js/ambient.js     luciérnagas, esporas, niebla, gotas y fauna (polillas, grillos, peces, murciélagos)
 js/audio.js       orquesta sintetizada, secuenciador, ambiente, efectos, modo chiptune

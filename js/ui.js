@@ -29,8 +29,9 @@
   function portrait(spr) {
     if (!spr || !G.SPR[spr]) return null;
     if (portraits[spr]) return portraits[spr];
-    const s = G.SPR[spr].down[0].c, c = G.makeCanvas(22, 18);
-    c.getContext('2d').drawImage(s, 0, 0, 22, 18, 0, 0, 22, 18);
+    // la cabeza, centrada en el lienzo del sprite
+    const s = G.SPR[spr].idle ? G.SPR[spr].idle.down[0].c : G.SPR[spr].down[0].c, c = G.makeCanvas(22, 18);
+    c.getContext('2d').drawImage(s, Math.round((s.width - 22) / 2) - 1, 0, 22, 18, 0, 0, 22, 18);
     return (portraits[spr] = c);
   }
 

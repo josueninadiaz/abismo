@@ -1,323 +1,307 @@
 'use strict';
-// ─── El protagonista: esqueleto de piezas de pixel art y todas sus animaciones ───
-// El diseño base es el del sprite original (cara en 3/4, un ojo grande y otro pequeño, punta blanca en la oreja,
-// bigotes cian, hombreras de cuero con broche, cola con punta en damero). Aquí se parte en piezas
-// (cabeza, brazos, piernas, cola, abrigo) para moverlas por separado, y al componer se añaden contorno y brillo de borde.
+// ─── Soren: su hoja de sprites (frente, espalda, perfil y agachado) convertida en piezas animadas ───
+// El dibujo base es el de la hoja original (capa de cuero, cara en 3/4, bigotes cian, cola en damero).
+// Cada pose se parte en zonas (cabeza, cuerpo, capa, brazos, piernas, cola) que se mueven por separado;
+// al componer se añade un contorno fino para que no se pierda sobre el suelo oscuro.
 (function () {
   const PAL = {
-    K: '#06121a', k: '#0c2a36', d: '#1e4854', t: '#2a6072', T: '#3e8698', r: '#16384a',
-    w: '#fcfcfa', W: '#e2e4e4', s: '#c2cacc', S: '#8e9a9e', n: '#10223a',
-    c: '#78f6cc', C: '#5ec6ac', e: '#e8fff6', M: '#2e7a6a',
-    h: '#c0ae98', b: '#9c8a76', B: '#6e6052',
+    K: '#021820', k: '#042c3a', r: '#03222e', d: '#0b4858', t: '#0f6573', T: '#22a2a8',
+    w: '#ffffff', W: '#e7e7e8', s: '#d2d3d4', n: '#0c2030',
+    c: '#03fcd1', C: '#1fcbae', M: '#0d6a5c', e: '#e8fff6',
+    b: '#927e6b', h: '#a48d73', B: '#6e5e4e',
   };
-  G.PAL_PROTA2 = PAL;
-  const W = 22, H = 33;
-
-  // ── piezas (coordenadas locales; '.' = transparente) ──
   const BASE = {
-    // ─ de frente ─
-    head_d: [
-      '..ww............',
-      '..dwk......k....',
-      '..ddkk....kdd...',
-      '..dkkkkkkkkkd...',
-      '..kkWkkkkkwkk...',
-      '.kkkWWkdkwwkkk..',
-      'ckWWewWWwwwwwkc.',
-      '.ckWcwcwssswkc..',
-      '..ckWWWWwwwkc...',
-      '.ckWWWWnwwwwkc..',
-      '...kkWswswkk....',
+    front: [
+      '..ww...............',
+      '..dww......k.......',
+      '..ddkk....kkd......',
+      '..dkktkkktkkd......',
+      '..kkwkkkkkwkk......',
+      '.kkkWWkkkWWkkk.....',
+      'ckwWcwWWWWWWwkc....',
+      '.ckWcwcWssswkc.....',
+      '..ckWWWWWWWkc......',
+      '.ckwwWWkWWwwkc.....',
+      '...tkwswswkt.......',
+      '..bbkkwwwkkbb......',
+      '.bhhhkkkkkhhhb.....',
+      '.bkkkbhwhbkkkb.....',
+      '.kkktkdddktkkk.....',
+      '.kkktdddddtkkk.....',
+      '.kkktdtdddtkkk.....',
+      '.kkktddtddtkkk.....',
+      '.kkktdtdddtkkk.....',
+      '.kkktddtddtkkk.....',
+      '.CCktdddddtkCC.....',
+      '.bCCdttdttdCCb..c..',
+      '..hkkddtddkkh.cckc.',
+      '..bkkkdtdkkktkkkc..',
+      '...kkkktkkkktkkkkc.',
+      '....kkktkkktkkkkc..',
+      '...kkkk.kkkktkk....',
+      '...kkkk.kkkk.......',
+      '..kkkkk.kkkkk......',
+      '..CCCk...kCCC......',
     ],
-    // parpadeo: ojos cerrados (se superpone a la cabeza)
-    blink_d: [[4, 6, 'W'], [4, 7, 'n'], [6, 7, 'n']],
-    // oreja que se mueve (la de la punta blanca, doblada)
-    ear_d: [[2, 0, '.'], [3, 0, '.'], [2, 1, 'w'], [3, 1, 'w'], [4, 1, 'k']],
-    body_d: [
-      '..bbkkwwwkkbb...',
-      '.bhhhkkkkkhhhb..',
-      '.bkkkbhwhbkkkb..',
-      '....tkdddkt.....',
-      '....tdddddt.....',
-      '....tdtdddt.....',
-      '....tddtddt.....',
-      '....tdtdddt.....',
-      '....tddtddt.....',
-      '...ktdddddtk....',
-      '...kdttdttdk....',
-      '...kkkddtddkk...',
-      '....kkkdtdkkk...',
-      '....kkkktkkkk...',
+    back: [
+      '...............ww..',
+      '.......k......www..',
+      '......kkk....kkkw..',
+      '......kktttttttkk..',
+      '......ktkkkkkkktk..',
+      '.....kkkkktkkkkkkk.',
+      '....ckkkktkkkkkkkkc',
+      '.....ckkkktkkkkkkc.',
+      '......ckkkkkkkkkc..',
+      '.....ckkkkkkkkkkkc.',
+      '.......tkkkkkkkt...',
+      '......bbbkkkkkbbb..',
+      '.....bhhhbbkbbhhhb.',
+      '.....bbhhhhbhhhhbb.',
+      '.....bhbhhhhhhhbhb.',
+      '.....bhhbbhhhbbhhb.',
+      '.....bhhhhbbbhhhhb.',
+      '.....bhhbhhhhhbhhb.',
+      '.....bhbhhhbhhhbhb.',
+      '.....bhbhhhbhhhbhb.',
+      '.....bbhhhhbhhhhbb.',
+      '..c..bhhhhbhhhhhhb.',
+      '.ckcc.bhhbkbhbhhb..',
+      '..ckkkkbbkkbbkbb...',
+      '.ckkkkkkbkkbkkbb...',
+      '..ckkkkkkkttkkb....',
+      '....kkkkktk.kkkk...',
+      '.......ttkk.kkkk...',
+      '......kkkkk.kkkkk..',
+      '......kkkk...kkkk..',
     ],
-    armL_d: ['kkk', 'kdk', 'kkk', 'kdk', 'kkk', 'kkk', 'CCk', 'bCC', 'hh.', '.h.'],
-    armR_d: ['kkk', 'kkk', 'kkk', 'kkk', 'kkk', 'kkk', 'kCC', 'CCb', '.hh', '.h.'],
-    legL_d: ['kkkk', 'kkkk', 'kkkkk', 'CCCk'],
-    legR_d: ['kkkk', 'kkkk', 'kkkkk', 'kCCC'],
-    tail_d: [
-      '.....c.',
-      '...cckc',
-      '..kkkc.',
-      '.kkkkkc',
-      'kkkkkc.',
-      'kkkk...',
-      '.kk....',
+    right: [
+      '.............w.......',
+      '............wd.......',
+      '...........kdd.k.....',
+      '...........kkttt.....',
+      '..........kkkwkkk....',
+      '..........kkkWWWWk...',
+      '........kkkwWWtcwW...',
+      '.........kkkwWWcwWWk.',
+      '..........kkkwWWWWWs.',
+      '.........kkkwwwwwwsw.',
+      '..........kkkkkkwww..',
+      '..........kbbbbbbk...',
+      '..........bhhhhhhb...',
+      '.........bhbbbbbdhw..',
+      '.........bhktkktddt..',
+      '.........bktkkktdddt.',
+      '........bhktkkktddt..',
+      '........bkktkkktddt..',
+      '........bkkktkkktd...',
+      '.c......btkktkkktd...',
+      'ckc.....btkktkkCtd...',
+      '.ckcc...bktkktCCt....',
+      'ckkkkk..kkktkkttd....',
+      '.ckkkkkkkkktkkkdd....',
+      '.ckkkkkkkkk.kkkkk....',
+      '..cckkkkkk..kkkkk....',
+      '....kkkk....kkkk.....',
+      '............kkkkk....',
+      '.............kkkkC...',
+      '.............kkkCC...',
     ],
-    // ─ de espaldas ─
-    head_u: [
-      '............ww..',
-      '....k......kwd..',
-      '...ddk....kkdd..',
-      '...dkkkkkkkkkd..',
-      '...kkkkkkkkkkk..',
-      '..kkkkkdkkkkkkk.',
-      '.ckkkkkkkkkkkkkc',
-      '..ckkkkkkkkkkkc.',
-      '...ckkkkkkkkkc..',
-      '..ckkkkkkkkkkkc.',
-      '....kkkkkkkkk...',
-    ],
-    ear_u: [[12, 0, '.'], [13, 0, '.'], [12, 1, 'w'], [13, 1, 'w'], [11, 1, 'k']],
-    body_u: [
-      '...bbkkkkkkkbb..',
-      '..bhhhkkkkkhhhb.',
-      '..bkkkbkkkbkkkb.',
-      '.....kkkdkkk....',
-      '.....kkkdkkk....',
-      '.....kkkdkkk....',
-      '.....kkkdkkk....',
-      '.....kkkdkkk....',
-      '.....kkkdkkk....',
-      '....kkkkdkkkk...',
-      '....kkkkdkkkk...',
-      '....kkkkdkkkk...',
-      '.....kkkdkkk....',
-      '.....kkkdkkk....',
-    ],
-    armL_u: ['kkk', 'kkk', 'kkk', 'kkk', 'kkk', 'kkk', 'CCk', 'bCC', 'hh.', '.h.'],
-    armR_u: ['kkk', 'kdk', 'kkk', 'kdk', 'kkk', 'kkk', 'kCC', 'CCb', '.hh', '.h.'],
-    legL_u: ['kkkk', 'kkkk', 'kkkkk', 'CCCk'],
-    legR_u: ['kkkk', 'kkkk', 'kkkkk', 'kCCC'],
-    tail_u: [
-      '.kkk.',
-      '.kkk.',
-      '..kkk',
-      '..kkk',
-      '.kkck',
-      '.kckc',
-      '..c.c',
-    ],
-    // ─ de perfil (mirando a la derecha) ─
-    head_s: [
-      '...ww...........',
-      '...dwk.k........',
-      '...ddkkdk.......',
-      '...dkkkkk.......',
-      '..kkkkkkWk......',
-      '.kkkkkkWWwk..c..',
-      'kkkkkkWWewwwk...',
-      '.kkkkkWWcwwwwwn.',
-      '..kkkkkWWwwwwk..',
-      '..ckkkkkWsssk..c',
-      '...kkkkkkkkk....',
-    ],
-    blink_s: [[8, 6, 'W'], [8, 7, 'n']],
-    ear_s: [[3, 0, '.'], [4, 0, '.'], [3, 1, 'w'], [4, 1, 'w'], [5, 1, 'k']],
-    body_s: [
-      '....bbkkkwk.....',
-      '...bhhhbkkkt....',
-      '...bhhbkkkdt....',
-      '...kbbkkkddt....',
-      '...kkkkkkddt....',
-      '...kkkkkkdtt....',
-      '...kkkkkkddt....',
-      '...kkkkkkdtt....',
-      '...kkkkkkddt....',
-      '...kkkkkkddt....',
-      '...kkkkkdttt....',
-      '...kkkkkkddk....',
-      '....kkkkkdk.....',
-      '....kkkkkkk.....',
-    ],
-    armF_s: ['kkk', 'kdk', 'kkk', 'kdk', 'kkk', 'kkk', 'CCC', 'bhb', '.h.'],
-    armB_s: ['rrr', 'rrr', 'rrr', 'rrr', 'rrr', 'rrr', 'CCC', 'BbB', '.b.'],
-    armUp_s: ['kkkkkCCh.', 'kdkkkCChh', '.......h.'], // brazo extendido hacia delante (lanzar, golpear)
-    armRaise_s: ['..hh', '..hC', '..CC', '.kk.', '.kk.', 'kdk.', 'kk..'], // brazo en alto delante de la cara (concentración)
-    armUpB_s: ['rrrrrMMb.', 'rrrrrMMbb'], // puñetazo con el otro brazo
-    armGuard_s: ['CCh', 'kCC', 'kk.', 'kdk', '.kk'], // guardia: antebrazo delante de la cara
-    legKick_s: ['kkkk....', 'kkkkkkCC', '..kkkkCC'], // patada alta hacia delante
-    legSweep_s: ['kkkkkkkCC', '.kkkkkkCC'], // barrido a ras de suelo
-    legF_s: ['kkk', 'kkk', 'kkk', 'CCCC'],
-    legB_s: ['rrr', 'rrr', 'rrr', 'MMMM'],
-    tail_s: [
-      'c.c....',
-      '.ckc...',
-      'ckkk...',
-      '.kkkk..',
-      '..kkkkk',
-      '...kkkk',
-      '.....kk',
+    crouch: [
+      '...............w.......',
+      '..............wd.......',
+      '.............kdd.k.....',
+      '.............kkttt.....',
+      '............kkkWkkk....',
+      '............kkkWWWWk...',
+      '..........kkkwWWtcwW...',
+      '...........kkkwWWcwWWk.',
+      '..........bkkkkwWWWWWs.',
+      '.........bhbbkwwwwwwsw.',
+      '........bhhhhbbkkkwww..',
+      '.......bhtkkthhbbk.....',
+      '.......btkkktddhbw.....',
+      '......bhtkkkktddt......',
+      '......bkktkkkktt.......',
+      '.....bhkkktkkkkt.......',
+      '.....bhkkkktkkkCt......',
+      '....kbktkkkktkCCt......',
+      '...kkbk.ttttdttt.......',
+      '..kkkkk.ddddkkkk.......',
+      '.ckkkk.kkkkkkk.........',
+      'ckkkkk.kkkk............',
+      'kckkk..kkkkC...........',
+      'c.cc....kkCC...........',
     ],
   };
+  const W = 30, H = 32, OY = 1;
+  const OX = { front: 7, back: 4, right: 1, crouch: 2 };
 
-  // marcas de la tribu (brillan) y cristales del pilar, puestos sobre las piezas para que se muevan con ellas
+  // zonas de cada vista (en coordenadas de la hoja)
+  const REGION = {
+    front: (x, y) => (y <= 10 ? 'head' : y >= 21 && y <= 25 && x >= 14 ? 'tail' : y >= 26 ? (x <= 7 ? 'legL' : 'legR') : y >= 14 && y <= 22 && x <= 3 ? 'armL' : y >= 14 && y <= 22 && x >= 11 && x <= 13 ? 'armR' : 'body'),
+    back: (x, y) => (y <= 10 ? 'head' : y >= 20 && y <= 25 && x <= 5 ? 'tail' : y >= 26 ? (x <= 10 ? 'legL' : 'legR') : y >= 17 ? 'cloak' : 'body'),
+    right: (x, y) => (y <= 10 ? 'head' : y >= 18 && y <= 26 && x <= 7 ? 'tail' : y >= 24 && x >= 11 ? 'leg' : y >= 19 && y <= 21 && x >= 13 && x <= 15 ? 'arm' : 'body'),
+    crouch: () => 'all',
+  };
+  // parpadeo, oreja y marcas de la tribu / cristales del pilar (en coordenadas de la hoja)
+  const BLINK = { front: [[4, 6, 'W'], [4, 7, 'n'], [6, 7, 'n']], right: [[15, 6, 'W'], [15, 7, 'n']], crouch: [[17, 6, 'W'], [17, 7, 'n']] };
+  const EAR = { front: [[2, 0, '.'], [3, 0, '.'], [3, 1, 'w']], back: [[15, 0, '.'], [16, 0, '.'], [15, 1, 'w']], right: [[13, 0, '.'], [13, 1, 'w']] };
   const MARKS = {
-    head_d: [[7, 3], [8, 3], [7, 4], [10, 8], [11, 9]], head_u: [[7, 5], [8, 5], [7, 6], [8, 6]], head_s: [[6, 3], [7, 3], [6, 4], [10, 8]],
-    armL_d: [[1, 2], [1, 3]], armR_d: [[1, 2], [1, 3]], armL_u: [[1, 2], [1, 3]], armR_u: [[1, 2], [1, 3]], armF_s: [[1, 2], [1, 3]],
+    front: [[6, 3], [8, 3], [7, 4], [9, 8], [10, 9], [2, 16], [2, 17], [12, 16], [12, 17]],
+    back: [[8, 6], [10, 6], [9, 7]],
+    right: [[11, 3], [12, 4], [11, 5], [17, 9], [13, 16], [13, 17]],
+    crouch: [[13, 3], [14, 4], [13, 5]],
   };
   const CRYST = {
-    body_d: [[2, 0, 'E'], [3, 0, 'X'], [1, 1, 'X'], [12, 0, 'X'], [11, 0, 'E'], [13, 1, 'X']],
-    body_u: [[3, 0, 'X'], [4, 0, 'E'], [2, 1, 'X'], [13, 0, 'E'], [12, 0, 'X'], [14, 1, 'X']],
-    body_s: [[4, 0, 'E'], [5, 0, 'X'], [3, 1, 'X'], [4, -1, 'X']],
+    front: [[1, 12, 'X'], [2, 11, 'E'], [3, 11, 'X'], [11, 11, 'X'], [12, 11, 'E'], [13, 12, 'X']],
+    back: [[6, 11, 'X'], [7, 10, 'E'], [8, 11, 'X'], [14, 11, 'X'], [15, 10, 'E'], [16, 11, 'X']],
+    right: [[11, 11, 'E'], [12, 10, 'X'], [13, 11, 'X'], [10, 12, 'X']],
+    crouch: [[10, 8, 'E'], [11, 7, 'X'], [9, 9, 'X']],
   };
-  const over = (rows, list, ch) => {
-    const out = rows.map((r) => r.split(''));
-    for (const [x, y, c] of list) if (out[y] && out[y][x] && out[y][x] !== '.') out[y][x] = c || ch; else if (out[y] && c) out[y][x] = c;
-    return out.map((r) => r.join(''));
+  // piezas extra para el combate (perfil, mirando a la derecha; coordenadas de la hoja)
+  const EXTRA = {
+    armUp: ['kkkkkCCh.', 'kdkkkCChh'],
+    armUpB: ['rrrrrMMb.', 'rrrrrMMbb'],
+    armRaise: ['..hh', '..hC', '..CC', '.kk.', '.kk.', 'kdk.', 'kk..'],
+    armGuard: ['CCh', 'kCC', 'kk.', 'kdk', '.kk'],
+    legKick: ['kkkk....', 'kkkkkkCC', '..kkkkCC'],
+    legSweep: ['kkkkkkkCC', '.kkkkkkCC'],
   };
+
   function build(mod = {}) {
-  const P = {};
-  for (const k in BASE) {
-    let v = BASE[k];
-    if (Array.isArray(v) && typeof v[0] === 'string') {
-      if (mod.marks && MARKS[k]) v = over(v, MARKS[k], 'x');
-      if (mod.crystals && CRYST[k]) v = over(v, CRYST[k]);
+    // prepara cada vista (con marcas / cristales si es un habitante) y la parte en piezas
+    const parts = {}, extras = {};
+    for (const v in BASE) {
+      const rows = BASE[v].map((r) => r.split(''));
+      const put = (list, ch) => { for (const [x, y, c] of list) if (rows[y] && rows[y][x] && rows[y][x] !== '.') rows[y][x] = c || ch; else if (rows[y] && c) rows[y][x] = c; };
+      if (mod.marks) put(MARKS[v], 'x');
+      if (mod.crystals) put(CRYST[v]);
+      const P = (parts[v] = {});
+      rows.forEach((r, y) => r.forEach((ch, x) => {
+        if (ch === '.') return;
+        const k = REGION[v](x, y);
+        (P[k] = P[k] || []).push([x + OX[v], y + OY, ch]);
+      }));
     }
-    P[k] = v;
-  }
+    for (const k in EXTRA) extras[k] = EXTRA[k];
 
-  // ── composición ──
-  function blank() { return Array.from({ length: H }, () => Array(W).fill('.')); }
-  function stamp(g, rows, x, y, mode) {
-    rows.forEach((r, j) => {
-      for (let i = 0; i < r.length; i++) {
-        const ch = r[i];
-        if (ch === '.') continue;
-        const X = x + i, Y = y + j;
-        if (X < 0 || Y < 0 || X >= W || Y >= H) continue;
-        if (mode === 'under' && g[Y][X] !== '.') continue;
-        g[Y][X] = ch;
-      }
-    });
-  }
-  function pts(g, list, x, y) { for (const [i, j, ch] of list) { const X = x + i, Y = y + j; if (g[Y] && X >= 0 && X < W) g[Y][X] = ch; } }
-  // contorno oscuro y brillo de borde (la luz viene de arriba a la izquierda)
-  function finish(g) {
-    const out = g.map((r) => r.slice());
-    const solid = (x, y) => y >= 0 && y < H && x >= 0 && x < W && g[y][x] !== '.';
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      if (g[y][x] === '.') {
-        if (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1)) out[y][x] = 'K';
-      } else if (g[y][x] === 'k' && (!solid(x - 1, y) || !solid(x, y - 1)) && solid(x + 1, y) && solid(x, y + 1)) out[y][x] = 'd';
+    const blank = () => Array.from({ length: H }, () => Array(W).fill('.'));
+    const stamp = (g, pts, dx = 0, dy = 0, map) => { for (const [x, y, ch] of pts || []) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < W && Y < H) g[Y][X] = map ? map[ch] || ch : ch; } };
+    const stampRows = (g, rows, x0, y0) => rows.forEach((r, j) => { for (let i = 0; i < r.length; i++) if (r[i] !== '.') { const X = x0 + i, Y = y0 + j; if (X >= 0 && Y >= 0 && X < W && Y < H) g[Y][X] = r[i]; } });
+    const pts = (g, list, v, dx, dy) => { for (const [x, y, ch] of list || []) { const X = x + OX[v] + dx, Y = y + OY + dy; if (g[Y] && X >= 0 && X < W && g[Y][X] !== '.') g[Y][X] = ch; } };
+    // contorno fino
+    function finish(g) {
+      const out = g.map((r) => r.slice());
+      const solid = (x, y) => y >= 0 && y < H && x >= 0 && x < W && g[y][x] !== '.';
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (g[y][x] === '.' && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) out[y][x] = 'K';
+      return out.map((r) => r.join(''));
     }
-    return out.map((r) => r.join(''));
-  }
-  const OX = 3, OY = 1; // margen para el contorno y la cola
+    const DARK = { k: 'r', d: 'r', t: 'r', C: 'M', c: 'M', b: 'B', h: 'B' };
 
-  // pose de frente / espaldas: o = { by: bote del cuerpo, hy: cabeza, al/ar: brazos, ll/lr: piernas (dy, dx), tx: cola, blink, ear }
-  function poseDU(view, o) {
-    const g = blank(), up = view === 'u';
-    const by = o.by || 0, hy = (o.hy || 0) + by;
-    const tail = P['tail_' + view];
-    if (!up) stamp(g, tail, OX + 11 + (o.tx || 0), OY + 21 + by);
-    // piernas
-    stamp(g, P['legL_' + view], OX + 2 + (o.ll ? o.ll[1] : 0), OY + 26 + (o.ll ? o.ll[0] : 0));
-    stamp(g, P['legR_' + view], OX + 8 + (o.lr ? o.lr[1] : 0), OY + 26 + (o.lr ? o.lr[0] : 0));
-    stamp(g, P['body_' + view], OX, OY + 11 + by);
-    if (up) stamp(g, tail, OX + 6 + (o.tx || 0), OY + 22 + by);
-    stamp(g, P['armL_' + view], OX + 1, OY + 14 + by + (o.al || 0));
-    stamp(g, P['armR_' + view], OX + 11, OY + 14 + by + (o.ar || 0));
-    stamp(g, P['head_' + view], OX, OY + hy);
-    if (o.ear) pts(g, P['ear_' + view], OX, OY + hy);
-    if (o.blink && !up) pts(g, P.blink_d, OX, OY + hy);
-    return finish(g);
-  }
-  // pose de perfil: o = { by, hy, af/ab: brazos [dx, dy], lf/lb: piernas [dx, dy], tx, ty, arm: 'up'|'raise', blink, ear, lean }
-  function poseS(o) {
-    const g = blank();
-    const by = o.by || 0, hy = (o.hy || 0) + by, ln = o.lean || 0;
-    stamp(g, P.tail_s, OX - 2 + (o.tx || 0), OY + 18 + by + (o.ty || 0));
-    stamp(g, P.armB_s, OX + 6 + (o.ab ? o.ab[0] : 0), OY + 13 + by + (o.ab ? o.ab[1] : 0));
-    stamp(g, P.legB_s, OX + 6 + (o.lb ? o.lb[0] : 0), OY + 26 + (o.lb ? o.lb[1] : 0));
-    if (!o.leg) stamp(g, P.legF_s, OX + 5 + (o.lf ? o.lf[0] : 0), OY + 26 + (o.lf ? o.lf[1] : 0));
-    stamp(g, P.body_s, OX + ln, OY + 11 + by);
-    if (o.leg === 'kick') stamp(g, P.legKick_s, OX + 9 + ln, OY + 21 + by);
-    else if (o.leg === 'sweep') stamp(g, P.legSweep_s, OX + 9, OY + 28);
-    if (o.arm === 'up') stamp(g, P.armUp_s, OX + 7 + ln, OY + 15 + by);
-    else if (o.arm === 'upB') { stamp(g, P.armUpB_s, OX + 7 + ln, OY + 15 + by); stamp(g, P.armF_s, OX + 3 + ln, OY + 13 + by); }
-    else if (!o.arm) stamp(g, P.armF_s, OX + 5 + ln + (o.af ? o.af[0] : 0), OY + 13 + by + (o.af ? o.af[1] : 0));
-    stamp(g, P.head_s, OX + ln, OY + hy);
-    if (o.arm === 'raise') stamp(g, P.armRaise_s, OX + 11 + ln, OY + 7 + by);
-    if (o.arm === 'guard') stamp(g, P.armGuard_s, OX + 10 + ln, OY + 9 + by);
-    if (o.ear) pts(g, P.ear_s, OX + ln, OY + hy);
-    if (o.blink) pts(g, P.blink_s, OX + ln, OY + hy);
-    return finish(g);
-  }
+    // frente: o = { by, hy, al, ar, ll: [dy, dx], lr, tx, blink, ear }
+    function poseD(o = {}) {
+      const g = blank(), P = parts.front, by = o.by || 0, hy = by + (o.hy || 0);
+      stamp(g, P.tail, o.tx || 0, by);
+      stamp(g, P.legL, o.ll ? o.ll[1] : 0, o.ll ? o.ll[0] : 0);
+      stamp(g, P.legR, o.lr ? o.lr[1] : 0, o.lr ? o.lr[0] : 0);
+      stamp(g, P.body, 0, by);
+      stamp(g, P.armL, 0, by + (o.al || 0));
+      stamp(g, P.armR, 0, by + (o.ar || 0));
+      stamp(g, P.head, 0, hy);
+      if (o.ear) pts(g, EAR.front, 'front', 0, hy);
+      if (o.blink) pts(g, BLINK.front, 'front', 0, hy);
+      return finish(g);
+    }
+    // espalda: la capa se mece al andar
+    function poseU(o = {}) {
+      const g = blank(), P = parts.back, by = o.by || 0, hy = by + (o.hy || 0);
+      stamp(g, P.legL, o.ll ? o.ll[1] : 0, o.ll ? o.ll[0] : 0);
+      stamp(g, P.legR, o.lr ? o.lr[1] : 0, o.lr ? o.lr[0] : 0);
+      stamp(g, P.body, 0, by);
+      stamp(g, P.cloak, o.cl || 0, by);
+      stamp(g, P.head, 0, hy);
+      stamp(g, P.tail, o.tx || 0, by);
+      if (o.ear) pts(g, EAR.back, 'back', 0, hy);
+      return finish(g);
+    }
+    // perfil (derecha): o = { by, hy, bx, lf: [dx, dy], lb, af, tail: [dx, dy], arm, leg, blink, ear }
+    function poseR(o = {}) {
+      const g = blank(), P = parts.right, by = o.by || 0, hy = by + (o.hy || 0), bx = o.bx || 0, ox = OX.right;
+      stamp(g, P.tail, bx + (o.tail ? o.tail[0] : 0), by + (o.tail ? o.tail[1] : 0));
+      if (o.arm === 'upB') stampRows(g, EXTRA.armUpB, ox + 14 + bx, OY + 15 + by);
+      if (o.leg !== 'kick') {
+        stamp(g, P.leg, -2 + (o.lb ? o.lb[0] : 0), o.lb ? o.lb[1] : 0, DARK); // la pierna de atrás, más oscura
+        stamp(g, P.leg, o.lf ? o.lf[0] : 0, o.lf ? o.lf[1] : 0);
+      } else stamp(g, P.leg, -3, -1, DARK);
+      stamp(g, P.body, bx, by);
+      if (o.leg === 'kick') stampRows(g, EXTRA.legKick, ox + 14 + bx, OY + 21 + by);
+      if (!o.arm || o.arm === 'upB') stamp(g, P.arm, bx + (o.af ? o.af[0] : 0), by + (o.af ? o.af[1] : 0));
+      if (o.arm === 'up') stampRows(g, EXTRA.armUp, ox + 14 + bx, OY + 14 + by);
+      stamp(g, P.head, bx + (o.hx || 0), hy);
+      if (o.arm === 'raise') stampRows(g, EXTRA.armRaise, ox + 17 + bx, OY + 5 + by);
+      if (o.arm === 'high') stampRows(g, EXTRA.armRaise, ox + 16 + bx, OY + 1 + by);
+      if (o.arm === 'guard') stampRows(g, EXTRA.armGuard, ox + 18 + bx, OY + 8 + by);
+      if (o.ear) pts(g, EAR.right, 'right', bx + (o.hx || 0), hy);
+      if (o.blink) pts(g, BLINK.right, 'right', bx + (o.hx || 0), hy);
+      return finish(g);
+    }
+    // agachado (su propia pose de la hoja)
+    function poseC(o = {}) {
+      const g = blank(), ox = OX.crouch;
+      stamp(g, parts.crouch.all, o.bx || 0, o.by || 0);
+      if (o.sweep) stampRows(g, EXTRA.legSweep, ox + 15, OY + 21);
+      if (o.guard) stampRows(g, EXTRA.armGuard, ox + 20, OY + 9);
+      if (o.blink) pts(g, BLINK.crouch, 'crouch', o.bx || 0, o.by || 0);
+      return finish(g);
+    }
 
-  // ── animaciones ──
-  // caminar: 6 fotogramas (apoyo, paso, alto, apoyo, paso, alto); brazos al revés que las piernas, la cola se mece
-  const walkDU = (v) => [
-    poseDU(v, { by: 0, al: 1, ar: -1, ll: [-1, 0], lr: [0, 0], tx: 1 }),
-    poseDU(v, { by: -1, al: 0, ar: 0, ll: [-2, 0], lr: [0, 0], tx: 1, ear: true }),
-    poseDU(v, { by: 0, al: -1, ar: 1, ll: [0, 0], lr: [0, 0], tx: 0 }),
-    poseDU(v, { by: 0, al: -1, ar: 1, ll: [0, 0], lr: [-1, 0], tx: -1 }),
-    poseDU(v, { by: -1, al: 0, ar: 0, ll: [0, 0], lr: [-2, 0], tx: -1, ear: true }),
-    poseDU(v, { by: 0, al: 1, ar: -1, ll: [0, 0], lr: [0, 0], tx: 0 }),
-  ];
-  // quieto: respira (el pecho baja y sube), la cola se mece, parpadea y mueve una oreja de vez en cuando
-  const idleDU = (v) => [
-    poseDU(v, {}), poseDU(v, { tx: 1 }), poseDU(v, { by: 1, hy: -1, tx: 1 }), poseDU(v, { by: 1, hy: -1, tx: 0, al: 0 }),
-    poseDU(v, { tx: -1 }), poseDU(v, { tx: -1, blink: true }), poseDU(v, {}), poseDU(v, { ear: true, tx: 1 }),
-  ];
-  const walkS = [
-    poseS({ lf: [2, 0], lb: [-2, 0], af: [-1, 0], ab: [2, -1], tx: 0, ty: 0 }),
-    poseS({ by: -1, lf: [1, -1], lb: [-1, 0], af: [0, 0], ab: [1, 0], tx: -1, ty: 1, ear: true }),
-    poseS({ lf: [0, 0], lb: [0, -1], af: [1, 0], ab: [0, 0], tx: -1, ty: 1 }),
-    poseS({ lf: [-2, 0], lb: [2, 0], af: [2, -1], ab: [-1, 0], tx: 0, ty: 0 }),
-    poseS({ by: -1, lf: [-1, 0], lb: [1, -1], af: [1, 0], ab: [0, 0], tx: 1, ty: -1, ear: true }),
-    poseS({ lf: [0, -1], lb: [0, 0], af: [0, 0], ab: [1, 0], tx: 1, ty: -1 }),
-  ];
-  const idleS = [
-    poseS({}), poseS({ tx: -1 }), poseS({ by: 1, hy: -1, tx: -1, ty: 1 }), poseS({ by: 1, hy: -1, ty: 1 }),
-    poseS({ tx: 1 }), poseS({ tx: 1, blink: true }), poseS({}), poseS({ ear: true, tx: -1 }),
-  ];
-  // salto: subiendo (piernas recogidas, brazos arriba) y cayendo (piernas estiradas, brazos abiertos)
-  const jumpDU = (v) => [
-    poseDU(v, { by: -1, hy: -1, al: -3, ar: -3, ll: [-3, 1], lr: [-3, -1], tx: 1, ear: true }),
-    poseDU(v, { by: 0, hy: -1, al: -1, ar: -1, ll: [-1, 0], lr: [-1, 0], tx: -1 }),
-  ];
-  const jumpS = [
-    poseS({ by: -1, hy: -1, lf: [2, -3], lb: [-1, -2], af: [1, -3], ab: [-1, -3], tx: -1, ty: -2, ear: true }),
-    poseS({ lf: [1, -1], lb: [-2, 0], af: [2, -1], ab: [-2, -1], tx: 1, ty: 1 }),
-  ];
-  // combate (de perfil): concentrarse, lanzar, golpear, recibir, agacharse para rodar
-  const combat = {
-    idle: [poseS({}), poseS({ tx: -1 }), poseS({ by: 1, hy: -1, tx: -1 }), poseS({ by: 1, hy: -1 })],
-    walk: walkS,
-    raise: [poseS({ arm: 'raise', by: 0 }), poseS({ arm: 'raise', by: -1, ear: true, tx: -1 })],
-    cast: [poseS({ arm: 'up', lean: 1, lf: [2, 0], lb: [-2, 0], tx: -2 }), poseS({ arm: 'up', lean: 1, lf: [2, 0], lb: [-2, 0], tx: -2, ty: -1 })],
-    strike: [poseS({ arm: 'up', lean: 2, lf: [3, 0], lb: [-2, 0], tx: -2, by: 1 }), poseS({ af: [2, -1], lean: 1, lf: [2, 0], lb: [-1, 0], tx: -1 })],
-    hurt: [poseS({ lean: -1, af: [-2, -1], ab: [-2, -1], blink: true, tx: 1, ty: -1, by: 1 })],
-    crouch: [poseS({ by: 3, hy: 1, lf: [1, -1], lb: [-1, -1], af: [1, -2], tx: 1, ear: true })],
-    jump: jumpS,
-    // lucha: guardia, puños, gancho, patadas, barrido, aire, derribo, victoria
-    guard: [poseS({ arm: 'guard', lean: -1, lf: [1, 0], lb: [-2, 0], tx: 1 })],
-    cguard: [poseS({ arm: 'guard', by: 3, hy: 1, lf: [1, -1], lb: [-1, -1], tx: 1 })],
-    jab1: [poseS({ arm: 'up', lean: 1, lf: [2, 0], lb: [-2, 0], tx: -1 })],
-    jab2: [poseS({ arm: 'upB', lean: 1, lf: [2, 0], lb: [-2, 0], tx: -1 })],
-    gancho: [poseS({ arm: 'raise', lean: 1, by: -1, lf: [1, -1], lb: [-2, 0], tx: -2, ty: -1, ear: true })],
-    kick: [poseS({ leg: 'kick', lean: -1, lb: [-1, 0], af: [-1, -1], tx: 1, ty: 1 })],
-    sweep: [poseS({ leg: 'sweep', by: 4, hy: 1, lb: [-2, -1], af: [0, -2], tx: 2, ty: 2 })],
-    airkick: [poseS({ leg: 'kick', by: -1, lean: -1, lb: [-1, -3], af: [-1, -2], tx: 1, ty: -2, ear: true })],
-    dash: [poseS({ lean: 2, lf: [3, -1], lb: [-3, 0], af: [-2, 0], tx: -3, ty: -1, ear: true })],
-    win: [poseS({ arm: 'raise', hy: -1, ear: true, tx: -1, ty: -2 }), poseS({ arm: 'raise', ear: false, tx: 1, ty: -1 })],
-  };
-
-  return {
-    down: { walk: walkDU('d'), idle: idleDU('d'), jump: jumpDU('d') },
-    up: { walk: walkDU('u'), idle: idleDU('u'), jump: jumpDU('u') },
-    side: { walk: walkS, idle: idleS, jump: jumpS },
-    combat,
-  };
+    // ── animaciones ──
+    const walkD = [
+      poseD({ al: 1, ar: -1, ll: [-1, 0], tx: 1 }), poseD({ by: -1, ll: [-2, 0], tx: 1, ear: true }), poseD({ al: -1, ar: 1, tx: 0 }),
+      poseD({ al: -1, ar: 1, lr: [-1, 0], tx: -1 }), poseD({ by: -1, lr: [-2, 0], tx: -1, ear: true }), poseD({ al: 1, ar: -1, tx: 0 }),
+    ];
+    const idleD = [poseD(), poseD({ tx: 1 }), poseD({ by: 1, hy: -1, tx: 1 }), poseD({ by: 1, hy: -1 }), poseD({ tx: -1 }), poseD({ tx: -1, blink: true }), poseD(), poseD({ ear: true, tx: 1 })];
+    const jumpD = [poseD({ by: -1, al: -3, ar: -3, ll: [-3, 1], lr: [-3, -1], tx: 1, ear: true }), poseD({ al: -1, ar: -1, ll: [-1, 0], lr: [-1, 0], tx: -1 })];
+    const walkU = [
+      poseU({ ll: [-1, 0], cl: 1, tx: -1 }), poseU({ by: -1, ll: [-2, 0], cl: 1, tx: -1, ear: true }), poseU({ cl: 0 }),
+      poseU({ lr: [-1, 0], cl: -1, tx: 1 }), poseU({ by: -1, lr: [-2, 0], cl: -1, tx: 1, ear: true }), poseU({ cl: 0 }),
+    ];
+    const idleU = [poseU(), poseU({ tx: -1 }), poseU({ by: 1, hy: -1, tx: -1 }), poseU({ by: 1, hy: -1, cl: 1 }), poseU({ tx: 1 }), poseU({ tx: 1 }), poseU(), poseU({ ear: true })];
+    const jumpU = [poseU({ by: -1, ll: [-3, 1], lr: [-3, -1], cl: -1, tx: -1, ear: true }), poseU({ ll: [-1, 0], lr: [-1, 0], cl: 1, tx: 1 })];
+    const walkR = [
+      poseR({ lf: [2, 0], lb: [-2, 0], af: [-1, 0], tail: [0, 0] }), poseR({ by: -1, lf: [1, -1], lb: [-1, 0], tail: [-1, 1], ear: true }), poseR({ lb: [0, -1], af: [1, 0], tail: [-1, 1] }),
+      poseR({ lf: [-2, 0], lb: [2, 0], af: [1, 0], tail: [0, 0] }), poseR({ by: -1, lf: [-1, 0], lb: [1, -1], tail: [1, -1], ear: true }), poseR({ lf: [0, -1], af: [-1, 0], tail: [1, -1] }),
+    ];
+    const idleR = [poseR(), poseR({ tail: [-1, 0] }), poseR({ by: 1, hy: -1, tail: [-1, 1] }), poseR({ by: 1, hy: -1, tail: [0, 1] }), poseR({ tail: [1, 0] }), poseR({ tail: [1, 0], blink: true }), poseR(), poseR({ ear: true, tail: [-1, 0] })];
+    const jumpR = [poseR({ by: -1, hy: -1, lf: [1, -3], lb: [-1, -2], af: [1, -2], tail: [-1, -2], ear: true }), poseR({ lf: [1, -1], lb: [-2, 0], af: [1, -1], tail: [1, 1] })];
+    // combate (de perfil)
+    const combat = {
+      idle: [poseR(), poseR({ tail: [-1, 0] }), poseR({ by: 1, hy: -1, tail: [-1, 1] }), poseR({ by: 1, hy: -1 })],
+      walk: walkR,
+      jump: jumpR,
+      crouch: [poseC()],
+      raise: [poseR({ arm: 'raise' }), poseR({ arm: 'raise', by: -1, ear: true, tail: [-1, 0] })],
+      cast: [poseR({ arm: 'up', bx: 1, lf: [2, 0], lb: [-2, 0], tail: [-2, 0] }), poseR({ arm: 'up', bx: 1, lf: [2, 0], lb: [-2, 0], tail: [-2, -1] })],
+      strike: [poseR({ arm: 'up', bx: 2, lf: [3, 0], lb: [-2, 0], tail: [-2, 0], by: 1 })],
+      hurt: [poseR({ bx: -1, hx: -1, af: [-2, -1], blink: true, tail: [1, -1], by: 1 })],
+      guard: [poseR({ arm: 'guard', bx: -1, lf: [1, 0], lb: [-2, 0], tail: [1, 0] })],
+      cguard: [poseC({ guard: true })],
+      jab1: [poseR({ arm: 'up', bx: 1, lf: [2, 0], lb: [-2, 0], tail: [-1, 0] })],
+      jab2: [poseR({ arm: 'upB', bx: 1, lf: [2, 0], lb: [-2, 0], tail: [-1, 0] })],
+      gancho: [poseR({ arm: 'high', bx: 1, by: -1, lf: [1, -1], lb: [-2, 0], tail: [-2, -1], ear: true })],
+      kick: [poseR({ leg: 'kick', bx: -1, af: [-1, -1], tail: [1, 1] })],
+      sweep: [poseC({ sweep: true })],
+      airkick: [poseR({ leg: 'kick', by: -1, bx: -1, af: [-1, -2], tail: [1, -2], ear: true })],
+      dash: [poseR({ bx: 2, hx: 1, lf: [3, -1], lb: [-3, 0], af: [-2, 0], tail: [-3, -1], ear: true })],
+      win: [poseR({ arm: 'high', hy: -1, ear: true, tail: [-1, -2] }), poseR({ arm: 'high', tail: [1, -1] })],
+    };
+    return {
+      down: { walk: walkD, idle: idleD, jump: jumpD },
+      up: { walk: walkU, idle: idleU, jump: jumpU },
+      side: { walk: walkR, idle: idleR, jump: jumpR },
+      combat,
+    };
   }
   G.PROTA = Object.assign(build(), { PAL, build });
 })();
