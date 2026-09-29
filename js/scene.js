@@ -54,6 +54,12 @@
     let t = 0;
     return task(() => { t++; F.a = G.lerp(a0, a, Math.min(1, t / n)); return t >= n; });
   };
+  // los ojos que se abren: k = 0 cerrados … 1 abiertos
+  G.eyes = (k, n = 40) => {
+    const k0 = G.UI.eyesK;
+    let t = 0;
+    return task(() => { t++; G.UI.eyesK = G.lerp(k0, k, G.ease(Math.min(1, t / n))); return t >= n; });
+  };
   G.flashFx = (col = [1, 1, 1], n = 20, a = 0.8) => {
     const F = G.R.flash; F.r = col[0]; F.g = col[1]; F.b = col[2];
     let t = 0;
@@ -80,7 +86,7 @@
 
   // ── partida guardada ──
   const SKEY = 'abismo-partida', MKEY = 'abismo-meta';
-  G.newSave = () => ({ zone: 'gruta', x: 6, y: 11, dir: 'down', flags: {}, plants: [], frags: [], skills: [], time: 0 });
+  G.newSave = () => ({ zone: 'gruta', x: 6, y: 11, dir: 'down', flags: {}, plants: [], frags: [], skills: [], arts: [], time: 0 });
   G.save = G.newSave();
   G.meta = { ended: false, plants: [] };
   try { const m = JSON.parse(localStorage.getItem(MKEY) || 'null'); if (m) G.meta = m; } catch (e) { /* nada */ }
@@ -110,4 +116,12 @@
     { id: 8, name: '???' }, { id: 9, name: '???' }, { id: 10, name: '???' },
   ];
   G.plantAt = (zone, x, y) => G.PLANTS.find((p) => p.zone === zone && p.x === x && p.y === y);
+
+  // ── artefactos de viaje: al activarlos, desde el Mapa se puede viajar a cualquiera de ellos ──
+  G.ARTIFACTS = [
+    { id: 1, zone: 'aldea', x: 4, y: 11, name: 'Boca de la Gruta' },
+    { id: 2, zone: 'senda', x: 13, y: 33, name: 'Pie de la Senda' },
+    { id: 3, zone: 'santuario', x: 5, y: 12, name: 'Puerta del Santuario' },
+  ];
+  G.artifactAt = (zone, x, y) => G.ARTIFACTS.find((p) => p.zone === zone && p.x === x && p.y === y);
 })();

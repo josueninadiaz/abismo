@@ -5,36 +5,98 @@
   const S = (G.STORY = {});
   const say = G.say, ask = G.ask;
 
-  // ── prólogo ──
+  // ── Escena 1: el despertar ──
+  // Oscuridad total: solo su respiración y gotas a lo lejos. Soren abre los ojos en una cueva de plantas de luz.
   S.prologo = function* () {
-    G.R.fade.a = 1;
-    G.audio.play('title');
-    yield G.narrate([
-      'Bajo la superficie, donde la luz nunca llegó, existe el Abismo.',
-      'Sus habitantes nacen con marcas que brillan en la piel: el lazo que los une a él.',
-      'Por ellas oyen su voz. Por ellas saben quiénes son.',
-      'Hasta que un día, la luz tocó el fondo.',
-      'Y allí donde tocó, creció un pilar de cuarzo.',
-    ], { auto: 330 });
+    G.UI.eyesK = 0; G.R.fade.a = 0;
     G.EX.enter('gruta', 6, 11, 'down');
-    G.EX.player.lying = true;
-    G.EX.frozen = true;
+    G.audio.stop(0.3);
+    const P = G.EX.player;
     lie(true);
-    yield G.fade(0, 120);
-    yield G.wait(60);
+    G.EX.frozen = true;
+    const L = G.R.look, tilt0 = L.tilt, range0 = L.dofRange;
+    L.tilt = 1.6; L.dofRange = 20; // todo borroso al principio
+    yield G.wait(80);
+    G.audio.sfx('breath'); yield G.wait(170);
+    G.audio.sfx('breath'); yield G.wait(190);
+    // abre los ojos: un parpadeo, otro, y se abren del todo
+    yield G.eyes(0.22, 50); yield G.wait(30); yield G.eyes(0, 18); yield G.wait(50);
+    G.audio.sfx('breath');
+    yield G.eyes(0.55, 60); yield G.wait(24); yield G.eyes(0.08, 16);
+    yield G.eyes(1, 100);
+    // la vista se aclara
+    let t = 0;
+    yield { update() { t++; const k = G.ease(Math.min(1, t / 120)); L.tilt = G.lerp(1.6, tilt0, k); L.dofRange = G.lerp(20, range0, k); return t >= 120; } };
+    G.audio.play('gruta');
     yield say('yo', '...');
-    yield say('yo', 'Hace frío. Hay una luz... cayendo desde muy arriba.');
-    yield G.wait(30);
+    yield say('yo', 'Hace frío. El suelo está húmedo.');
     lie(false);
     G.audio.sfx('step');
     yield G.wait(40);
-    yield say('yo', 'No recuerdo cómo llegué aquí.');
-    yield say('yo', 'No recuerdo nada. Ni siquiera mi nombre.');
+    // se levanta y mira a su alrededor
+    G.face('prota', 'left');
+    yield G.camTo(P.x - 100, P.z - 20, 70);
+    yield G.wait(30);
+    G.face('prota', 'right');
+    yield G.camTo(P.x + 120, P.z - 30, 90);
+    yield G.wait(30);
+    yield G.camBack(50);
+    G.face('prota', 'down');
+    yield say('yo', 'Plantas que brillan en la oscuridad... azules, verdes, moradas.');
+    yield say('yo', '¿Dónde estoy? ¿Cómo he llegado aquí?');
+    yield say('yo', '¿Y por qué estoy solo?');
+    yield G.wait(40);
+    yield say('yo', 'Intento recordar algo. Lo que sea.');
+    yield say('yo', 'Pero no hay nada. Mi cabeza está completamente vacía.');
     G.EX.frozen = false;
     G.UI.hint('[move]: moverte   [a]: examinar / hablar   [j]: saltar   [start]: menú', 600);
     yield G.titleCard('Gruta del Despertar');
     G.setFlag('visto_gruta');
   };
+  // la zona de plantas y hongos rojos
+  S.zona_roja = function* () {
+    G.EX.frozen = true;
+    yield G.camTo(17 * 16 + 8, 5 * 16, 70);
+    yield say('yo', 'Esas plantas... y esos hongos. Son rojos.');
+    yield say('yo', 'No se parecen a nada más de la cueva.');
+    yield say('yo', 'No sé qué son. Pero algo dentro de mí me dice que me mantenga lejos.');
+    yield G.wait(40);
+    yield say('yo', 'Por primera vez desde que desperté... siento que aquí hay algo que no debería estar.');
+    yield G.camBack(50);
+    G.EX.frozen = false;
+  };
+  // el mapa colgado en la pared y la inscripción de al lado
+  S.mapa = (p) => function* () {
+    yield say(null, 'Un mapa, clavado en la roca con una púa de cristal rojo.');
+    yield say(null, 'Está dibujado a mano. Muestra la cueva... y los caminos que salen de ella.');
+    G.setFlag('mapa');
+    G.audio.sfx('ok');
+    p.bb.root.visible = false;
+    const Z = G.W3.zone(); Z.props.splice(Z.props.indexOf(p), 1);
+    G.UI.toast('Has obtenido el Mapa', '#d8c090');
+    yield say(null, G.keys('Puedes consultarlo en el menú ([start]).'));
+  };
+  S.inscripcion = () => function* () {
+    yield say(null, 'Junto al mapa hay algo tallado en la roca. Las letras brillan con un rojo débil.');
+    yield say(null, '«Él nos dará un nuevo futuro. Acéptalo, ámalo y entiéndelo...»');
+    yield say('yo', '¿Él?');
+  };
+  // artefacto de viaje
+  S.artefacto = (p) => function* () {
+    const def = p.def;
+    if (!def) { yield say(null, 'Un artefacto antiguo. Está apagado.'); return; }
+    const arts = G.save.arts || (G.save.arts = []);
+    if (!arts.includes(def.id)) {
+      yield say(null, 'Un artefacto antiguo. Un anillo de piedra flota sobre el pedestal y gira muy despacio.');
+      yield say(null, 'Al acercar la mano, el anillo se enciende.');
+      arts.push(def.id);
+      G.lightArtifact(p);
+      yield G.wait(30);
+      G.UI.toast('Artefacto de viaje: ' + def.name, '#9affe8');
+      yield say(null, G.flag('mapa') ? G.keys('Desde el Mapa ([start]) podrás viajar a cualquier artefacto que hayas activado.') : 'Parece conectado con otros como él. Con un mapa podrías usarlos para viajar.');
+    } else yield say(null, 'El artefacto zumba en calma.' + (G.flag('mapa') ? G.keys(' Abre el Mapa ([start]) para viajar.') : ''));
+  };
+
   // el protagonista tumbado en el suelo
   function lie(on) {
     const P = G.EX.player;

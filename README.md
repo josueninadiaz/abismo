@@ -30,6 +30,14 @@ Lucha lateral en 2D al estilo de los juegos de pelea (*Mortal Kombat*, *Street F
 - **Tharn, guardián del Claro**: 2 rondas (Mente y Recuerdos).
 - **Oren, el antiguo líder**: inmune al daño físico; solo le afectan las habilidades. Cinco rondas, una por habilidad, y cada una te devuelve un **fragmento de memoria**. Al final cuenta la verdad.
 
+## Escena 1: el despertar
+
+Soren despierta a oscuras, solo con su respiración y las gotas. Abre los ojos poco a poco, con la vista borrosa, en una cueva de plantas de luz azules, verdes y moradas. Más adelante hay una zona de plantas y hongos rojos que le dan mala espina. En la pared del fondo cuelga el **mapa**, y a su lado una inscripción: «Él nos dará un nuevo futuro. Acéptalo, ámalo y entiéndelo...». Justo al salir de la cueva está el primer **artefacto de viaje**.
+
+## Mapa y artefactos de viaje
+
+Con el mapa, el menú muestra las zonas conocidas y dónde estás. Cada artefacto de viaje que actives aparece en el Mapa, y desde ahí puedes viajar a cualquiera de ellos. Hay tres en el prólogo (`G.ARTIFACTS`, en `js/scene.js`).
+
 ## Plantas-alma
 
 En todo el Abismo hay 10 puntos de guardado. Cada uno es una planta que guarda una pequeña parte del alma de un ser, y solo en ellas se puede guardar. Al terminar la partida, el título ofrece **Regresar a una planta-alma** para volver a cualquiera de las que hayas despertado sin perder el progreso. En este prólogo hay tres; las otras siete están reservadas en `G.PLANTS` (en `js/scene.js`).

@@ -103,6 +103,8 @@
   const OBJ = {
     H: [',', 'hongo'], K: [',', 'hongos'], V: ['r', 'roja'], F: ['r', 'roja_flor'], L: [null, 'farol'], A: [null, 'estalagmita'],
     C: ['r', 'cristal'], T: [null, 'tienda'], S: [null, 'planta'], P: ['q', 'pilar'], B: [null, 'roca'], M: [',', 'hongo_grande'],
+    R: ['r', 'hongo_rojo'], U: [',', 'planta_azul'], N: [',', 'planta_verde'], Y: [',', 'planta_morada'],
+    D: [null, 'mapa'], I: [null, 'inscripcion'], O: [null, 'artefacto'],
   };
   W3.TERR = TERR;
 
@@ -461,6 +463,26 @@
       const bb = sprite(kind, { glow: 1.8, blob: false });
       Z.anim.push((t) => { bb.pivot.rotation.z = Math.sin(t * 0.03 + x) * 0.05; });
       if (kind === 'roja_flor') Z.lights.push({ x, y: y + 10, z, col: '#ff3a5a', i: 0.5, d: 60, flick: 0.2 });
+    } else if (kind === 'hongo_rojo') {
+      sprite('hongo_rojo', { glow: 2 });
+      Z.lights.push({ x, y: y + 10, z, col: '#ff3a50', i: 0.7, d: 70, flick: 0.2 });
+    } else if (kind === 'planta_azul' || kind === 'planta_verde' || kind === 'planta_morada') {
+      sprite(kind, { glow: 2.2, blob: false });
+      const col = { planta_azul: '#5a9aff', planta_verde: '#5aff7a', planta_morada: '#b05aff' }[kind];
+      Z.lights.push({ x, y: y + 10, z, col, i: 0.7, d: 75, flick: 0.12 });
+    } else if (kind === 'mapa' || kind === 'inscripcion') {
+      // colgados en la roca del fondo
+      const bb = W3.billboard(G.SPR[kind === 'mapa' ? 'mapa_pared' : 'inscripcion'], { blob: false, glow: kind === 'inscripcion' ? 1.6 : 1 });
+      bb.place(x, y + 10, z - 7); root.add(bb.root);
+      Z.props.push({ kind, x, z, bb });
+      if (kind === 'inscripcion') Z.lights.push({ x, y: y + 16, z: z - 2, col: '#ff3a4a', i: 0.45, d: 50, flick: 0.3 });
+    } else if (kind === 'artefacto') {
+      const bb = sprite('artefacto_off', { glow: 2.4 });
+      Z.solids.push({ x, z, r: 6 });
+      const L = { x, y: y + 22, z, col: '#9affe8', i: 0.2, d: 90, flick: 0.1 };
+      Z.lights.push(L);
+      Z.props.push({ kind: 'artefacto', x, z, bb, light: L });
+      Z.anim.push((t) => { bb.pivot.position.y = Math.sin(t * 0.05) * 0.6; });
     } else if (kind === 'farol') {
       sprite('farol', { glow: 2.6 });
       Z.lights.push({ x, y: y + 22, z: z + 2, col: '#ffb060', i: 1.5, d: 150, flick: 0.35 });

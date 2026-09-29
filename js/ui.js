@@ -8,7 +8,7 @@
 
   // ── quién habla ──
   G.WHO = {
-    prota: { name: () => (G.flag('nombre_sabido') ? 'Tú' : '???'), spr: 'prota' },
+    prota: { name: 'Soren', spr: 'prota' },
     yo: { name: () => '', spr: null },
     mira: { name: 'Mira', spr: 'mira' },
     suen: { name: 'Anciana Suen', spr: 'suen' },
@@ -32,6 +32,23 @@
     const s = G.SPR[spr].down[0].c, c = G.makeCanvas(22, 18);
     c.getContext('2d').drawImage(s, 0, 0, 22, 18, 0, 0, 22, 18);
     return (portraits[spr] = c);
+  }
+
+  // ── párpados: negro con una abertura elíptica que se abre ──
+  UI.eyesK = 1;
+  function drawEyes() {
+    const k = UI.eyesK;
+    if (k >= 0.999) return;
+    ctx.save();
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 480, 270);
+    if (k > 0.01) {
+      ctx.globalCompositeOperation = 'destination-out';
+      const g = ctx.createRadialGradient(240, 135, 0, 240, 135, 300);
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.7, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(240, 135, 330, 180 * k * k, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
   }
 
   // ── estado ──
@@ -203,7 +220,7 @@
     if (!t) return;
     let x, y, z;
     if (t.kind === 'npc') { x = t.a.x; y = t.a.y + 44 * (t.a.o.scale || 1); z = t.a.z; }
-    else if (t.kind === 'planta') { x = t.p.x; y = 30; z = t.p.z; }
+    else if (t.kind === 'planta' || t.kind === 'prop') { x = t.p.x; y = 32; z = t.p.z; }
     else { x = t.t.x * 16 + 8; y = 18; z = t.t.y * 16 + 8; }
     const [sx, sy] = G.W3.project(x, y, z);
     const bob = Math.round(Math.sin(G.t * 0.12) * 1.5);
@@ -230,7 +247,7 @@
   ];
   UI.openMenu = (fromTitle) => { menu = { page: fromTitle ? 'opciones' : 'main', i: 0, j: 0, fromTitle, t: 0 }; G.audio.sfx('ok'); G.consume(); };
   UI.menuOpen = () => !!menu;
-  const MAIN = ['Continuar', 'Habilidades', 'Recuerdos', 'Plantas-alma', 'Opciones', 'Volver al título'];
+  const MAIN = ['Continuar', 'Mapa', 'Habilidades', 'Recuerdos', 'Plantas-alma', 'Opciones', 'Volver al título'];
   function drawMenu() {
     const m = menu;
     m.t++;
@@ -258,8 +275,8 @@
       if (G.ok() && m.t > 5) {
         G.audio.sfx('ok');
         if (m.i === 0) { menu = null; return; }
-        if (m.i === 5) { menu = null; G.toTitle(); return; }
-        m.page = ['main', 'habilidades', 'recuerdos', 'plantas', 'opciones'][m.i]; m.j = 0; return;
+        if (m.i === 6) { menu = null; G.toTitle(); return; }
+        m.page = ['main', 'mapa', 'habilidades', 'recuerdos', 'plantas', 'opciones'][m.i]; m.j = 0; return;
       }
       const loc = G.ZONES[G.EX.zoneId];
       G.text(ctx, loc ? loc.name : '', px, py, GOLD);
@@ -269,7 +286,8 @@
       return;
     }
     if (G.pressed('b') || G.pressed('start')) return back();
-    if (m.page === 'habilidades') {
+    if (m.page === 'mapa') { if (drawMap(px, py, m)) return; }
+    else if (m.page === 'habilidades') {
       if (G.pressed('up')) { m.j = (m.j + 4) % 5; G.audio.sfx('move'); }
       if (G.pressed('down')) { m.j = (m.j + 1) % 5; G.audio.sfx('move'); }
       G.text(ctx, 'Las cinco habilidades', px, py, GOLD);
@@ -301,6 +319,55 @@
         G.text(ctx, has ? p.name : '? ? ?', cx + 9, cy, has ? INK : DIM);
       });
     } else if (m.page === 'opciones') drawOptions(px, py, m);
+  }
+  // ── el mapa del Abismo: zonas conocidas, dónde estás y los artefactos de viaje ──
+  const NODES = { gruta: [40, 130], aldea: [120, 130], senda: [120, 60], santuario: [210, 60] };
+  const LINKS = [['gruta', 'aldea'], ['aldea', 'senda'], ['senda', 'santuario']];
+  function drawMap(px, py, m) {
+    G.text(ctx, 'Mapa del Abismo', px, py, GOLD);
+    if (!G.flag('mapa')) { G.wrap('Todavía no tienes un mapa.', 270).forEach((l, i) => G.text(ctx, l, px, py + 20 + i * 12, DIM)); return; }
+    const arts = G.ARTIFACTS.filter((a) => (G.save.arts || []).includes(a.id));
+    const ox = px + 12, oy = py + 14;
+    // papel del mapa
+    ctx.fillStyle = 'rgba(216,192,144,0.10)'; ctx.fillRect(ox - 6, oy, 270, 170);
+    for (const [a, b] of LINKS) {
+      if (!G.flag('visto_' + a) && !G.flag('visto_' + b)) continue;
+      const A = NODES[a], B = NODES[b];
+      ctx.fillStyle = 'rgba(216,191,134,0.5)';
+      const n = Math.hypot(B[0] - A[0], B[1] - A[1]);
+      for (let i = 0; i < n; i += 4) ctx.fillRect(Math.round(ox + A[0] + (B[0] - A[0]) * i / n), Math.round(oy + A[1] + (B[1] - A[1]) * i / n), 2, 1);
+    }
+    for (const id in NODES) {
+      const [x, y] = NODES[id], seen = G.flag('visto_' + id), here = G.EX.zoneId === id;
+      ctx.fillStyle = seen ? '#d8bf86' : '#4a4450'; ctx.fillRect(ox + x - 4, oy + y - 4, 9, 9);
+      ctx.fillStyle = '#12101a'; ctx.fillRect(ox + x - 3, oy + y - 3, 7, 7);
+      if (here && Math.floor(G.t / 15) % 2) { ctx.fillStyle = '#9affe8'; ctx.fillRect(ox + x - 2, oy + y - 2, 5, 5); }
+      G.textC(ctx, seen ? G.ZONES[id].name : '? ? ?', ox + x, oy + y + 8, here ? '#fff4d0' : seen ? INK : DIM);
+      const art = arts.find((a) => a.zone === id);
+      if (art) { ctx.fillStyle = '#9affe8'; ctx.fillRect(ox + x + 6, oy + y - 8, 3, 3); ctx.fillRect(ox + x + 7, oy + y - 9, 1, 5); }
+    }
+    // viajar a un artefacto
+    G.text(ctx, 'Artefactos de viaje', px, py + 192, GOLD);
+    if (!arts.length) { G.text(ctx, 'Ninguno activado todavía.', px, py + 206, DIM); return; }
+    if (G.pressed('up')) { m.j = (m.j + arts.length - 1) % arts.length; G.audio.sfx('move'); }
+    if (G.pressed('down')) { m.j = (m.j + 1) % arts.length; G.audio.sfx('move'); }
+    m.j = Math.min(m.j, arts.length - 1);
+    const a = arts[m.j];
+    G.text(ctx, '< ' + a.name + ' >', px + 110, py + 192, '#9affe8');
+    const can = G.mode === 'explore' && !G.scene;
+    G.text(ctx, G.keys(can ? '[a]: viajar allí' : 'No puedes viajar ahora'), px + 110, py + 206, can ? INK : DIM);
+    if (can && m.t > 5 && G.ok()) {
+      menu = null;
+      G.audio.sfx('fragment');
+      G.run(function* () {
+        yield G.flashFx([0.6, 1, 0.9], 30, 0.9);
+        yield G.fade(1, 20, [0, 0, 0]);
+        G.EX.enter(a.zone, a.x, a.y + 1, 'down');
+        yield G.wait(6);
+        yield G.fade(0, 30);
+      });
+      return true;
+    }
   }
   function drawOptions(px, py, m) {
     const o = G.R.opt, A = G.audio;
@@ -367,6 +434,7 @@
     if (G.mode === 'combat' && G.CB) G.CB.drawHUD(ctx);
     if (G.mode === 'title' && G.TITLE) G.TITLE.draw(ctx);
     drawPrompt();
+    drawEyes();
     if (card) drawCard();
     if (hint && !UI.blocking()) drawHint();
     if (toast) drawToast();

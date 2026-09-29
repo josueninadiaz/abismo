@@ -408,6 +408,8 @@
     boom() { thump(50, 0.8); crunch(0.5, 0.3); },
     heart() { thump(70, 0.35); thump(60, 0.3, 0.18); },
     murcielagos() { A.batsNow(); },
+    // respiración: inspirar y soltar el aire (ruido filtrado)
+    breath() { for (const [d, len, f, v] of [[0, 1.1, 700, 0.09], [1.3, 1.6, 480, 0.07]]) { const t = ctx.currentTime + d, bp = filt('bandpass', f, 1.2, sfxBus), gg = gainTo(0, bp); gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(v, t + len * 0.4); gg.gain.linearRampToValueAtTime(0, t + len); bp.frequency.linearRampToValueAtTime(f * (d ? 0.8 : 1.25), t + len); noise(t, t + len + 0.1, gg); } },
     jump() { sweep(260, 700, 0.12, 0.08, 'triangle'); },
     land() { thump(120, 0.12); crunch(0.05, 0.05); },
     splash() { crunch(0.3, 0.2); for (let i = 0; i < 4; i++) tone('sine', 600 + Math.random() * 900, 0.2, 0.04, i * 0.04, true); },

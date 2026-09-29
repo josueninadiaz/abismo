@@ -1022,7 +1022,7 @@
   CB.drawHUD = (c) => {
     if (!def) return;
     // barras: Luz del protagonista a la izquierda, Corrupción del enemigo a la derecha
-    const pn = G.flag('nombre_sabido') ? 'TÚ' : '???';
+    const pn = 'SOREN';
     bar(c, 16, 22, 188, 10, P.hp, P.ghost, P.hp > 30 ? '#6affd0' : '#ff9a6a');
     bar(c, 276, 22, 188, 10, E.corr / E.max * 100, E.ghost / E.max * 100, '#ff4a6a', true);
     G.text(c, pn, 18, 9, '#9affe8');

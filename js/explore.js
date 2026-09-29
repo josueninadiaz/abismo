@@ -132,6 +132,14 @@
       p.def = def;
       if (def && G.save.plants.includes(def.id)) G.lightPlant(p, true);
     }
+    // el mapa de la gruta ya no está si lo cogiste
+    const Zp = G.W3.zone().props;
+    for (let i = Zp.length - 1; i >= 0; i--) if (Zp[i].kind === 'mapa' && G.flag('mapa')) { Zp[i].bb.root.visible = false; Zp.splice(i, 1); }
+    // artefactos de viaje ya activados
+    for (const p of G.W3.zone().props) if (p.kind === 'artefacto') {
+      p.def = G.artifactAt(id, Math.floor(p.x / TS), Math.floor(p.z / TS));
+      if (p.def && (G.save.arts || []).includes(p.def.id)) G.lightArtifact(p, true);
+    }
     G.audio.play(zone.music);
     G.audio.ambient(zone.ambient);
     G.W3.snap();
@@ -140,6 +148,11 @@
   };
   E.get = (id) => E.actors.find((a) => a.id === id);
 
+  G.lightArtifact = (p, quiet) => {
+    p.bb.set(G.SPR.artefacto);
+    p.light.i = 1.2;
+    if (!quiet) { G.audio.sfx('fragment'); G.fxBurst(p.x, 24, p.z, '#9affe8', 50); }
+  };
   G.lightPlant = (p, quiet) => {
     p.bb.set(G.SPR.planta);
     p.light.i = 1.3; p.light.col = '#9affe8';
@@ -225,9 +238,9 @@
       const d = Math.hypot(a.x - px, a.z - pz);
       if (d < bd + (a.o.scale ? 8 : 0)) { bd = d; best = { kind: 'npc', a }; }
     }
-    for (const p of G.W3.zone().props) if (p.kind === 'planta') {
+    for (const p of G.W3.zone().props) {
       const d = Math.hypot(p.x - px, p.z - pz);
-      if (d < bd) { bd = d; best = { kind: 'planta', p }; }
+      if (d < bd) { bd = d; best = { kind: p.kind === 'planta' ? 'planta' : 'prop', p }; }
     }
     for (const t of E.zone.things || []) {
       const d = Math.hypot(t.x * TS + 8 - px, t.y * TS + 8 - pz);
@@ -246,6 +259,7 @@
       if (!a.o.scale) a.faceTo(P.x, P.z);
       G.run(G.STORY[a.talk] || G.STORY.nada, () => { a.busy = false; });
     } else if (t.kind === 'planta') G.run(G.STORY.planta(t.p));
+    else if (t.kind === 'prop') G.run(G.STORY[t.p.kind](t.p));
     else if (t.kind === 'thing') G.run(function* () { for (const l of t.t.text) yield G.say(null, l); });
   }
 

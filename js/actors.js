@@ -67,5 +67,5 @@
   };
   G.SPR.prota_lie = { c: rot(lie.c), e: rot(lie.e), w: lie.h, h: lie.w };
 
-  for (const k of ['planta', 'planta_off', 'hongo', 'hongos', 'roja', 'roja_flor', 'farol', 'memoria', 'polilla1', 'polilla2', 'grillo1', 'grillo2', 'pez', 'murci1', 'murci2']) G.makeStatic(k, A[k]);
+  for (const k of ['planta', 'planta_off', 'hongo', 'hongos', 'roja', 'roja_flor', 'farol', 'memoria', 'polilla1', 'polilla2', 'grillo1', 'grillo2', 'pez', 'murci1', 'murci2', 'planta_azul', 'planta_verde', 'planta_morada', 'hongo_rojo', 'mapa_pared', 'inscripcion', 'artefacto', 'artefacto_off']) G.makeStatic(k, A[k]);
 })();

@@ -173,3 +173,83 @@ G.ART.murci2 = { pal: PAL_MURCI, rows: [
   '.nnk.k.knn.',
   'nk.......kn',
 ] };
+
+// ── escena 1: plantas de luz de colores, hongos rojos, el mapa, la inscripción y el artefacto de viaje ──
+const PLANTA_LUZ = [
+  '....kk..kk..',
+  '...kcCk.kCk.',
+  '..kcxcCkkcCk',
+  '..kCcCk.kCk.',
+  '.kk.kCkkkk..',
+  'kCk..kgk.kk.',
+  'kcCk.kgk.kCk',
+  '.kCCkkgkkCck',
+  '..kkgkgkgkk.',
+  '...kgGgGgk..',
+  '..kgGggGgk..',
+  '...kkkkkk...',
+];
+G.ART.planta_azul = { pal: { k: '#08101c', c: '#7ab8ff', C: '#3a6ad8', x: '#e0f0ff', g: '#1e3a4a', G: '#2e5a6a' }, rows: PLANTA_LUZ };
+G.ART.planta_verde = { pal: { k: '#08140c', c: '#8aff8a', C: '#3ab85a', x: '#eaffe0', g: '#1e3a2a', G: '#2e5a3a' }, rows: PLANTA_LUZ };
+G.ART.planta_morada = { pal: { k: '#120818', c: '#d08aff', C: '#8a3ad8', x: '#f6e6ff', g: '#2a1a3a', G: '#3e2a5a' }, rows: PLANTA_LUZ };
+G.ART.hongo_rojo = { pal: { k: '#14040a', c: '#ff6a7a', C: '#c02a44', x: '#ffd0d8', s: '#a8909a', S: '#6a5058' }, rows: [
+  '..kkkkkk....',
+  '.kCccxcCk...',
+  'kCcxccccCk..',
+  'kccccxcccCk.',
+  'kkCCCCCCCkk.',
+  '...ksSk.kkk.',
+  '...ksSkkcCk.',
+  '..kssSSkCCk.',
+  '..kssSSk.sk.',
+] };
+G.ART.mapa_pared = { pal: { k: '#140c08', p: '#d8c090', P: '#a8905a', l: '#6a5030', r: '#c03040', n: '#3a2a1a', m: '#8a7a50' }, rows: [
+  '......kk......',
+  '.....krrk.....',
+  '.kkkkkrrkkkkk.',
+  'kpppPpkkpPpppk',
+  'kpmmppllppmppk',
+  'kpplmmpplmmPpk',
+  'kPpppnlmppplpk',
+  'kpmmpplppnpppk',
+  'kpplppmmplmmPk',
+  'kppnnppppppPpk',
+  'kPppmmpplppppk',
+  '.kPpppPkpppPk.',
+  '..kkkkk.kkkk..',
+] };
+G.ART.inscripcion = { pal: { k: '#0c0608', s: '#3a3440', S: '#4a4452', x: '#ff4a5a', X: '#a02030' }, rows: [
+  'kkkkkkkkkkkk',
+  'kSsSsSsSsSSk',
+  'ksxX.xXx.xsk',
+  'kS.xXx.Xx.Sk',
+  'ksxX.x.xXxsk',
+  'kS.X.xXx..Sk',
+  'ksxXx.x.xXsk',
+  'kSsSsSsSsSSk',
+  'kkkkkkkkkkkk',
+] };
+const ARTEFACTO = [
+  '....kkkkk.....',
+  '...kCcccCk....',
+  '..kCcxxxcCk...',
+  '..kcx...xck...',
+  '..kCcxxxcCk...',
+  '...kCcccCk....',
+  '....kkkkk.....',
+  '.....kCk......',
+  '......k.......',
+  '...kkkkkkk....',
+  '..kSssssSSk...',
+  '..kkSSSSSkk...',
+  '...ksSssSk....',
+  '...ksCcsSk....',
+  '...ksSssSk....',
+  '...kscCsSk....',
+  '...ksSssSk....',
+  '..kkSSSSSkk...',
+  '.kSssssssSSk..',
+  '.kkkkkkkkkkk..',
+];
+G.ART.artefacto = { pal: { k: '#0a0c14', s: '#5a5e6e', S: '#3a3e4c', c: '#9affe8', C: '#3ac8b0', x: '#ffffff' }, rows: ARTEFACTO };
+G.ART.artefacto_off = { pal: { k: '#0a0c14', s: '#4a4e5a', S: '#30333e', c: '#4a5a60', C: '#2e3a40', x: '#6a7a80' }, rows: ARTEFACTO };
