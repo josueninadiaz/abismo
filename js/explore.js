@@ -243,11 +243,11 @@
     fxMesh.frustumCulled = false; fxMesh.count = 0;
     G.W3.scene.add(fxMesh);
   }
-  G.fxBurst = (x, y, z, c, n) => {
+  G.fxBurst = (x, y, z, c, n, sp = 1) => {
     ensureFx();
     for (let i = 0; i < n; i++) {
-      const a = Math.random() * 6.28, s = G.rnd(0.2, 1.1);
-      fxList.push({ x, y, z, vx: Math.cos(a) * s, vy: G.rnd(0.3, 1.4), vz: Math.sin(a) * s * 0.7, life: G.ri(40, 90), col: new THREE.Color(c) });
+      const a = Math.random() * 6.28, s = G.rnd(0.2, 1.1) * sp;
+      fxList.push({ x, y, z, vx: Math.cos(a) * s, vy: G.rnd(0.3, 1.4) * sp, vz: Math.sin(a) * s * 0.7, life: sp < 1 ? G.ri(12, 24) : G.ri(40, 90), col: new THREE.Color(c), g: sp < 1 ? 0.08 : 0 });
     }
   };
   function stepFx() {
@@ -255,12 +255,12 @@
     let n = 0;
     for (let i = fxList.length - 1; i >= 0; i--) {
       const f = fxList[i];
-      f.x += f.vx; f.y += f.vy; f.z += f.vz; f.vx *= 0.96; f.vz *= 0.96; f.vy *= 0.97;
+      f.x += f.vx; f.y += f.vy; f.z += f.vz; f.vx *= 0.96; f.vz *= 0.96; f.vy = f.vy * 0.97 - f.g;
       if (--f.life <= 0) { fxList.splice(i, 1); continue; }
       if (n >= MAXF) continue;
       dummy.position.set(f.x, f.y, f.z);
       dummy.quaternion.copy(G.W3.cam.quaternion);
-      dummy.scale.setScalar(Math.min(1, f.life / 20) * 1.6);
+      dummy.scale.setScalar(Math.min(1, f.life / 20) * (f.g ? 0.8 : 1.6));
       dummy.updateMatrix();
       fxMesh.setMatrixAt(n, dummy.matrix);
       fxMesh.setColorAt(n, col.copy(f.col).multiplyScalar(2.2));

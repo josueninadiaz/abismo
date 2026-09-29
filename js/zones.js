@@ -13,6 +13,8 @@ G.ZONES.gruta = {
   look: { tint: [0.95, 1.0, 1.06], lift: [0.0, 0.01, 0.02], sat: 1.0, bloom: 1.0 },
   dust: { col: '#5a8a90', shaft: '#fff0d0', amount: 0.7 },
   shafts: [[6, 11, 18, '#ffeccc', 0.8]], spot: 1.8,
+  rays: [[15, 5, 9, '#d8f0ff', 0.45], [21, 11, 7, '#d8f0ff', 0.35], [11, 13, 6, '#e8f4ff', 0.3]],
+  fauna: { flies: 50, spores: 110, grillos: 5, polillas: 4, peces: 5, murcielagos: true, gotas: 0.7, flyCol: '#9affd8', sporeCol: '#6ae8ff', mistCol: '#203848' },
   map: [
     '############################',
     '############################',
@@ -47,7 +49,9 @@ G.ZONES.aldea = {
   sky: '#6a6a9a', gnd: '#1a1418', amb: 0.4, fog: '#06060c', fill: '#806a60', fillI: 0.22, moss: 1.1, water: '#22c8c0',
   look: { tint: [1.04, 1.0, 0.96], lift: [0.01, 0.005, 0.0], sat: 1.05, bloom: 0.95 },
   dust: { col: '#a09080', shaft: '#fff0d0', amount: 0.8 },
-  shafts: [],
+  shafts: [[19, 14, 30, '#fff0d0', 0.75]], spot: 1.2,
+  rays: [[8, 9, 10, '#ffe8c8', 0.5], [31, 8, 12, '#ffe8c8', 0.45], [26, 19, 9, '#ffe8c8', 0.4], [12, 20, 8, '#ffe8c8', 0.35]],
+  fauna: { flies: 80, spores: 60, grillos: 10, polillas: 8, peces: 6, gotas: 0.3, flyCol: '#d8ff8a', sporeCol: '#fff0b0', mistCol: '#303040' },
   map: [
     '###################:::##################',
     '###################:::##################',
@@ -102,6 +106,8 @@ G.ZONES.senda = {
   look: { tint: [1.08, 0.96, 0.98], lift: [0.015, 0.0, 0.005], sat: 1.08, bloom: 1.1 },
   dust: { col: '#b07080', shaft: '#fff0e0', ember: '#ff4a6a', embers: 0.25, amount: 1 },
   shafts: [[14, 7, 40, '#fff2dc', 0.9]], spot: 1.5,
+  rays: [[9, 25, 9, '#fff0e0', 0.45], [21, 19, 10, '#fff0e0', 0.4], [11, 16, 7, '#ffe0e8', 0.35]],
+  fauna: { flies: 40, spores: 120, grillos: 6, polillas: 3, gotas: 0.3, flyCol: '#ffb0c0', sporeCol: '#ff6a8a', mistCol: '#401828' },
   corrupt: [[14, 7, 0.55, 22]], // (x, y, intensidad, radio): el aire se tuerce cerca del pilar
   map: [
     '##############################',
@@ -163,11 +169,13 @@ G.ZONES.senda = {
 };
 
 G.ZONES.santuario = {
-  name: 'Santuario Hundido', music: 'gruta', ambient: 'pilar',
+  name: 'Santuario Hundido', music: 'gruta', ambient: 'santuario',
   sky: '#6a5a9a', gnd: '#140c18', amb: 0.34, fog: '#06040c', fill: '#8070b0', fillI: 0.22, moss: 1.2, water: '#7a6aff',
   look: { tint: [1.0, 0.97, 1.08], lift: [0.01, 0.0, 0.02], sat: 1.02, bloom: 1.15 },
   dust: { col: '#8a80c0', shaft: '#f0e8ff', ember: '#ff5a7a', embers: 0.12, amount: 1 },
   shafts: [[13, 5, 26, '#e8e0ff', 0.9]], spot: 1.6,
+  rays: [[6, 13, 9, '#e8e0ff', 0.45], [19, 10, 8, '#e8e0ff', 0.4]],
+  fauna: { flies: 40, spores: 100, grillos: 3, polillas: 4, peces: 4, murcielagos: true, gotas: 0.6, flyCol: '#c8b0ff', sporeCol: '#a8a0ff', mistCol: '#282040' },
   corrupt: [[13, 5, 0.35, 12]],
   map: [
     '##########################',

@@ -240,11 +240,11 @@
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: {
       uT: { value: 0 }, uC: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(520, 170, 360) },
-      uShaft: { value: [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()] },
+      uShaft: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4()) },
       uCol: { value: new THREE.Color('#8aa0b0') }, uSCol: { value: new THREE.Color('#fff4d8') }, uEmb: { value: new THREE.Color('#ff4a6a') },
       uEmbers: { value: 0 }, uSize: { value: 1 }, uScale: { value: 1 }, uAmt: { value: 1 },
     },
-    vertexShader: `uniform float uT, uSize, uScale, uAmt, uEmbers; uniform vec3 uC, uBox; uniform vec4 uShaft[3];
+    vertexShader: `uniform float uT, uSize, uScale, uAmt, uEmbers; uniform vec3 uC, uBox; uniform vec4 uShaft[6];
       attribute vec4 aSeed; varying float vB; varying float vS; varying float vE;
       void main(){
         vE = step(1.0 - uEmbers, aSeed.w);
@@ -254,7 +254,7 @@
         p = mod(p - uC + uBox * 0.5, uBox) - uBox * 0.5 + uC;
         p.y = mod(position.y + uT * (vE > 0.5 ? 9.0 : 1.5) * sp, uBox.y) - 8.0;
         float s = 0.0;
-        for (int i = 0; i < 3; i++) { vec4 sh = uShaft[i]; if (sh.w > 0.0) s += (1.0 - smoothstep(sh.z * 0.5, sh.z * 1.15, distance(p.xz, sh.xy))) * sh.w; }
+        for (int i = 0; i < 6; i++) { vec4 sh = uShaft[i]; if (sh.w > 0.0) s += (1.0 - smoothstep(sh.z * 0.5, sh.z * 1.15, distance(p.xz, sh.xy))) * sh.w; }
         vS = clamp(s, 0.0, 1.0);
         float tw = 0.55 + 0.45 * sin(uT * 2.0 * sp + aSeed.w * 30.0);
         vB = (0.18 + vS * 1.9 + vE * 1.2) * tw * step(aSeed.z, uAmt);
@@ -371,8 +371,10 @@
     for (const o of objs) addProp(o.kind, o.x * TS + 8, o.y * TS + 8, hAt(o.x, o.y));
     for (const o of zone.lights || []) Z.lights.push({ x: o[0] * TS + 8, y: o[2] || 24, z: o[1] * TS + 8, col: o[3], i: o[4] || 1, d: o[5] || 120, flick: o[6] });
     // rayos de luz
-    for (const s of zone.shafts || []) {
-      const [sx, sz, r, col, inten] = s;
+    // rayos: los de zone.shafts dan foco con sombras (el primero); los de zone.rays son solo luz en el aire
+    const allRays = (zone.shafts || []).concat((zone.rays || []).map((r) => r.concat([true])));
+    for (const s of allRays) {
+      const [sx, sz, r, col, inten, deco] = s;
       const X = sx * TS + 8, Zc = sz * TS + 8;
       const ray = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.35, r, 420, 32, 1, true), rayMat());
       ray.position.set(X - 60, 210, Zc - 50); // inclinado: la luz viene de arriba y un poco de atrás
@@ -383,11 +385,12 @@
       const pool = new THREE.Mesh(new THREE.PlaneGeometry(r * 2.6, r * 2.6), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: new THREE.Color(col || '#fff0d0').multiplyScalar(0.28 * (inten || 1)) }));
       pool.rotation.x = -Math.PI / 2; pool.position.set(X, hAt(sx, sz) + 0.6, Zc); pool.renderOrder = 3;
       root.add(pool);
-      Z.shafts.push({ x: X, z: Zc, r, col, i: inten || 1, ray, pool });
+      Z.shafts.push({ x: X, z: Zc, r, col, i: inten || 1, ray, pool, deco: !!deco, ph: G.hash(sx, sz) * 6 });
     }
     // foco con sombras sobre el rayo principal
-    if (Z.shafts.length) {
-      const s = Z.shafts[0];
+    const main = Z.shafts.find((q) => !q.deco);
+    if (main) {
+      const s = main;
       spot.position.set(s.x - 110, 440, s.z - 90);
       spot.target.position.set(s.x, 0, s.z);
       spot.color.set(s.col || '#fff0d0');
@@ -407,10 +410,11 @@
     dustMat.uniforms.uEmb.value.set(D.ember || '#ff4a6a');
     dustMat.uniforms.uEmbers.value = D.embers || 0;
     dustMat.uniforms.uAmt.value = D.amount != null ? D.amount : 1;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 6; i++) {
       const s = Z.shafts[i];
       dustMat.uniforms.uShaft.value[i].set(s ? s.x : 0, s ? s.z : 0, s ? s.r : 0, s ? s.i : 0);
     }
+    if (G.AMB) G.AMB.build(Z);
     return Z;
   };
   function unload() {
@@ -560,7 +564,12 @@
       pl.intensity = k * (Z.lightMul || 1); pl.distance = l.d;
     }
     for (const a of Z.anim) a(t);
-    for (const s of Z.shafts) { s.ray.material.uniforms.uT.value = t / 60; }
+    // los rayos respiran: su intensidad sube y baja despacio, como si pasaran nubes allá arriba
+    for (const s of Z.shafts) {
+      const u = s.ray.material.uniforms, k = 0.82 + Math.sin(t * 0.008 + s.ph) * 0.12 + Math.sin(t * 0.021 + s.ph * 2) * 0.06;
+      u.uT.value = t / 60; u.uI.value = s.i * k;
+    }
+    if (G.AMB) G.AMB.step(t, now);
     if (Z.water) Z.water.material.uniforms.uT.value = t / 60;
     dustMat.uniforms.uT.value = t / 60;
     dustMat.uniforms.uC.value.set(now.x, 0, now.z - 30);

@@ -285,29 +285,102 @@
     noise(t, t + 0.4, g);
   }
 
-  // ── ambiente (viento de cueva y gotas) ──
+  // ── ambiente: viento, gotas, grillos, ranas, criaturas lejanas, murciélagos y el zumbido del cuarzo ──
+  // Cada zona tiene su mezcla. Los grillos y las ranas se callan cuanto más cerca estás del pilar.
+  const AMBP = {
+    cueva: { wind: 320, windV: 0.35, drips: 0.5, crickets: 0.25, frogs: 0, creature: 0.05, bats: 0.03, hum: 0 },
+    aldea: { wind: 280, windV: 0.25, drips: 0.2, crickets: 0.9, frogs: 0.35, creature: 0.02, bats: 0, hum: 0 },
+    pilar: { wind: 500, windV: 0.45, drips: 0.2, crickets: 0.35, frogs: 0, creature: 0.04, bats: 0, hum: 1 },
+    santuario: { wind: 380, windV: 0.35, drips: 0.45, crickets: 0.1, frogs: 0, creature: 0.05, bats: 0.04, hum: 0.6 },
+  };
   let amb = null;
+  const pan = (dest, p) => {
+    if (!ctx.createStereoPanner) return dest;
+    const n = ctx.createStereoPanner(); n.pan.value = p; n.connect(dest); return n;
+  };
   A.ambient = (kind) => {
     if (!ctx) { A.pendingAmb = kind; return; }
     if (amb && amb.kind === kind) return;
-    if (amb) { const a = amb; a.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.5); setTimeout(() => { a.src.stop(); a.g.disconnect(); clearInterval(a.iv); }, 2500); }
+    if (amb) {
+      const a = amb;
+      a.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.5);
+      clearInterval(a.iv);
+      setTimeout(() => { try { a.src.stop(); a.lfo.stop(); for (const o of a.hum) o.stop(); } catch (e) { /* ya parado */ } a.g.disconnect(); }, 2500);
+    }
     amb = null;
     if (!kind) return;
-    const g = gainTo(0.0001, ambBus); g.gain.setTargetAtTime(kind === 'pilar' ? 0.5 : 0.35, ctx.currentTime, 1);
-    const lp = filt('lowpass', kind === 'pilar' ? 500 : 320, 0.8, g);
+    const P = AMBP[kind] || AMBP.cueva;
+    const g = gainTo(0.0001, ambBus); g.gain.setTargetAtTime(1, ctx.currentTime, 1);
+    // viento
+    const wg = gainTo(P.windV, g);
+    const lp = filt('lowpass', P.wind, 0.8, wg);
     const src = noise(ctx.currentTime, ctx.currentTime + 3600, lp);
     const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.07; lg.gain.value = 140;
     lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
-    // gotas que caen en el agua
-    const iv = setInterval(() => {
-      if (!G.chance(kind === 'aldea' ? 0.25 : 0.45)) return;
-      const t = ctx.currentTime + Math.random() * 0.3, dg = gainTo(0, ambBus);
-      dg.connect(revIn);
-      dg.gain.setValueAtTime(0.06 + Math.random() * 0.05, t); dg.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-      const o = osc('sine', 900 + Math.random() * 900, t, t + 0.3, dg); o.frequency.exponentialRampToValueAtTime(1800 + Math.random() * 800, t + 0.08);
-    }, 900);
-    amb = { kind, g, src, iv };
+    // zumbido del cuarzo: acorde agudo y trémulo
+    const hum = [], humG = gainTo(0, g);
+    if (P.hum) {
+      for (const f of [1318.5, 1975.5, 2793]) {
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f * (1 + (Math.random() - 0.5) * 0.004);
+        const og = gainTo(0.33, humG); o.connect(og); o.start(); hum.push(o);
+        const tl = ctx.createOscillator(), tg = ctx.createGain(); tl.frequency.value = 0.3 + Math.random() * 0.5; tg.gain.value = 0.25;
+        tl.connect(tg); tg.connect(og.gain); tl.start(); hum.push(tl);
+      }
+    }
+    const ev = { g, P, humG };
+    const iv = setInterval(() => ambTick(ev), 250);
+    amb = { kind, g, src, iv, hum, lfo };
   };
+  function ambTick(ev) {
+    if (!ctx || ctx.state !== 'running') return;
+    const P = ev.P, life = Math.max(0, 1 - A.corrupt * 1.8), now = ctx.currentTime;
+    if (P.hum) ev.humG.gain.setTargetAtTime((0.004 + A.corrupt * 0.03) * P.hum, now, 0.5);
+    if (G.chance(P.drips * 0.28)) drip(now + Math.random() * 0.2, ev.g);
+    if (G.chance(P.crickets * 0.22 * life)) cricket(now + Math.random() * 0.2, ev.g);
+    if (G.chance(P.frogs * 0.07 * life)) frog(now + Math.random() * 0.2, ev.g);
+    if (G.chance(P.creature * 0.05)) creature(now + Math.random() * 0.2, ev.g);
+    if (G.chance(P.bats * 0.05)) bats(now, ev.g);
+  }
+  function drip(t, out) {
+    const d = gainTo(0, pan(out, (Math.random() - 0.5) * 1.4)); d.connect(revIn);
+    d.gain.setValueAtTime(0.05 + Math.random() * 0.05, t); d.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    const o = osc('sine', 900 + Math.random() * 900, t, t + 0.3, d); o.frequency.exponentialRampToValueAtTime(1800 + Math.random() * 800, t + 0.08);
+  }
+  // un grillo: tres o cuatro pulsos muy agudos
+  function cricket(t, out) {
+    const p = pan(out, (Math.random() - 0.5) * 1.6), f = 4200 + Math.random() * 900, v = 0.012 + Math.random() * 0.018, n = 3 + Math.floor(Math.random() * 3);
+    for (let r = 0; r < (Math.random() < 0.5 ? 1 : 2); r++) for (let i = 0; i < n; i++) {
+      const s = t + r * 0.4 + i * 0.05, gg = gainTo(0, p);
+      gg.gain.setValueAtTime(0, s); gg.gain.linearRampToValueAtTime(v, s + 0.006); gg.gain.linearRampToValueAtTime(0, s + 0.03);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.connect(gg); o.start(s); o.stop(s + 0.04);
+    }
+  }
+  function frog(t, out) {
+    const p = pan(out, (Math.random() - 0.5) * 1.2), f = 110 + Math.random() * 60;
+    for (let i = 0; i < 2; i++) {
+      const s = t + i * 0.14, bp = filt('bandpass', 420, 3, p), gg = gainTo(0, bp);
+      gg.gain.setValueAtTime(0, s); gg.gain.linearRampToValueAtTime(0.09, s + 0.02); gg.gain.exponentialRampToValueAtTime(0.001, s + 0.1);
+      const o = ctx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f, s); o.frequency.linearRampToValueAtTime(f * 0.8, s + 0.1); o.connect(gg); o.start(s); o.stop(s + 0.12);
+    }
+  }
+  // una criatura muy lejos, con mucho eco
+  function creature(t, out) {
+    const p = pan(out, (Math.random() - 0.5) * 1.6), lp = filt('lowpass', 900, 0.7, p), gg = gainTo(0, lp);
+    gg.connect(revIn);
+    const f = 260 + Math.random() * 180, d = 1 + Math.random() * 0.8;
+    gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(0.035, t + 0.3); gg.gain.exponentialRampToValueAtTime(0.001, t + d);
+    const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.62, t + d); o.connect(gg); o.start(t); o.stop(t + d + 0.1);
+    const l = ctx.createOscillator(), lgn = ctx.createGain(); l.frequency.value = 5 + Math.random() * 2; lgn.gain.value = 12; l.connect(lgn); lgn.connect(o.detune); l.start(t); l.stop(t + d + 0.1);
+  }
+  function bats(t, out) {
+    const p = pan(out, (Math.random() - 0.5) * 1.8);
+    for (let i = 0; i < 3 + Math.floor(Math.random() * 4); i++) {
+      const s = t + i * (0.05 + Math.random() * 0.08), gg = gainTo(0, p);
+      gg.gain.setValueAtTime(0, s); gg.gain.linearRampToValueAtTime(0.02, s + 0.004); gg.gain.exponentialRampToValueAtTime(0.001, s + 0.03);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(7500 + Math.random() * 1500, s); o.frequency.exponentialRampToValueAtTime(5500, s + 0.03); o.connect(gg); o.start(s); o.stop(s + 0.04);
+    }
+  }
+  A.batsNow = () => { if (ctx && amb) bats(ctx.currentTime, amb.g); };
 
   // ── efectos ──
   const SFX = {
@@ -334,6 +407,7 @@
     purify() { [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => tone('triangle', 392 * Math.pow(2, s / 12), 1.6, 0.08, i * 0.07, true)); },
     boom() { thump(50, 0.8); crunch(0.5, 0.3); },
     heart() { thump(70, 0.35); thump(60, 0.3, 0.18); },
+    murcielagos() { A.batsNow(); },
   };
   function tone(type, f, dur, v, delay = 0, rev = false) {
     const t = ctx.currentTime + delay, g = gainTo(0, sfxBus);

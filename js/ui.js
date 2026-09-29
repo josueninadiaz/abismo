@@ -47,11 +47,16 @@
   function drawDialog() {
     const d = dlg;
     d.t++;
+    // mantener [b] avanza rápido (sin pararse en cada línea); en las elecciones siempre se para
+    const fast = d.t > 2 && G.held('b');
     if (d.n < d.total) {
       d.n += d.o.slow ? 0.5 : 1.2;
       if (Math.floor(d.n) % 3 === 0) G.audio.sfx('blip');
-      if (d.t > 2 && (G.pressed('a') || G.pressed('b'))) d.n = d.total;
-    } else if (!d.o.keep && (G.pressed('a') || G.pressed('b'))) { d.done = true; dlg = null; G.audio.sfx('move'); return; }
+      if (d.t > 2 && (G.pressed('a') || G.pressed('b') || fast)) { d.n = d.total; d.full = d.t; }
+    } else {
+      if (d.full == null) d.full = d.t;
+      if (!d.o.keep && (G.pressed('a') || (fast && d.t - d.full > 4))) { d.done = true; dlg = null; G.audio.sfx('move'); return; }
+    }
     const x = 36, y = G.mode === 'combat' ? 62 : 194, w = 408, h = 68;
     G.frame(ctx, x, y, w, h);
     const name = nameOf(d.who);
@@ -73,6 +78,7 @@
       G.text(ctx, l, tx, y + 11 + i * 12, INK, '#0a0812', left);
       left -= plain;
     });
+    if (G.scene) G.text(ctx, G.keys('Mantén [b]: avanzar'), x + w - 26 - G.textW(G.keys('Mantén [b]: avanzar')), y + h - 13, 'rgba(154,148,168,0.8)', '#0a0812');
     if (d.n >= d.total && !d.o.keep && Math.floor(d.t / 20) % 2) { ctx.fillStyle = GOLD; ctx.fillRect(x + w - 16, y + h - 12, 5, 1); ctx.fillRect(x + w - 15, y + h - 11, 3, 1); ctx.fillRect(x + w - 14, y + h - 10, 1, 1); }
   }
 
@@ -102,7 +108,9 @@
   function drawCard() {
     const c = card;
     c.t++;
-    const T = 220, a = c.t < 40 ? c.t / 40 : c.t > T - 40 ? (T - c.t) / 40 : 1;
+    const T = 220;
+    if (c.t > 20 && c.t < T - 40 && (G.pressed('a') || G.pressed('b'))) c.t = T - 40;
+    const a = c.t < 40 ? c.t / 40 : c.t > T - 40 ? (T - c.t) / 40 : 1;
     if (c.t >= T) { c.done = true; card = null; return; }
     ctx.globalAlpha = Math.max(0, a);
     const w = G.textW(c.text) * 2, x = Math.round(240 - w / 2), y = 104;
@@ -131,6 +139,8 @@
     ls.forEach((s, i) => G.textC(ctx, s, 240, 128 - ls.length * 7 + i * 14, n.o.color || '#e8e0d0', null));
     ctx.globalAlpha = 1;
     if (n.t > 50 && Math.floor(n.t / 30) % 2) G.textC(ctx, '·', 240, 230, DIM, null);
+    G.text(ctx, G.keys('[b]: saltar'), 470 - G.textW(G.keys('[b]: saltar')), 256, '#5a5468', null);
+    if (n.t > 5 && (G.pressed('b') || G.pressed('start'))) { n.done = true; narr = null; G.audio.sfx('back'); return; }
     if (n.t > 20 && (G.pressed('a') || n.t > (n.o.auto || 99999))) {
       n.i++; n.t = 0;
       if (n.i >= n.lines.length) { n.done = true; narr = null; }
@@ -158,7 +168,7 @@
     ls.forEach((s, i) => G.textC(ctx, s, 240, 120 - ls.length * 7 + i * 14, '#f6e6c8', '#1a0e04'));
     ctx.globalAlpha = 1;
     if (m.t > 40 && Math.floor(m.t / 30) % 2) G.textC(ctx, '·', 240, 232, GOLD, null);
-    if (m.t > 25 && G.pressed('a')) { m.i++; m.t = 0; if (m.i >= m.lines.length) { m.done = true; memo = null; } }
+    if ((m.t > 25 && G.pressed('a')) || (m.t > 12 && G.held('b'))) { m.i++; m.t = 0; if (m.i >= m.lines.length) { m.done = true; memo = null; } }
   }
 
   // ── avisos ──

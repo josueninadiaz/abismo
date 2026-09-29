@@ -68,5 +68,5 @@
   };
   G.SPR.prota_lie = { c: rot(lie.c), e: rot(lie.e), w: lie.h, h: lie.w };
 
-  for (const k of ['planta', 'planta_off', 'hongo', 'hongos', 'roja', 'roja_flor', 'farol', 'memoria']) G.makeStatic(k, A[k]);
+  for (const k of ['planta', 'planta_off', 'hongo', 'hongos', 'roja', 'roja_flor', 'farol', 'memoria', 'polilla1', 'polilla2', 'grillo1', 'grillo2', 'pez', 'murci1', 'murci2']) G.makeStatic(k, A[k]);
 })();

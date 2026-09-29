@@ -246,3 +246,57 @@ G.ART.memoria = { pal: { k: '#1a1030', c: '#fff4d0', C: '#ffd070', x: '#ffffff' 
   '..kCk..',
   '...k...',
 ] };
+
+// ── fauna del Abismo ──
+// polilla de luz (dos aleteos)
+const PAL_POLILLA = { k: '#10141c', w: '#c8f0ff', c: '#a8fff0', C: '#5ad8c8' };
+G.ART.polilla1 = { pal: PAL_POLILLA, rows: [
+  'C.....C',
+  'cC.k.Cc',
+  '.cCcCc.',
+  '..kck..',
+] };
+G.ART.polilla2 = { pal: PAL_POLILLA, rows: [
+  '.......',
+  '..Ckc..',
+  'cCCcCCc',
+  '..kck..',
+] };
+// grillo de cueva
+const PAL_GRILLO = { k: '#0a0a0e', g: '#4a4a3a', G: '#6a6a52', x: '#d8ff9a' };
+G.ART.grillo1 = { pal: PAL_GRILLO, rows: [
+  'k.....',
+  '.kGGk.',
+  'kgGGgx',
+  'k.k.k.',
+] };
+G.ART.grillo2 = { pal: PAL_GRILLO, rows: [
+  '.k....',
+  'k.GGk.',
+  '.gGGgx',
+  'k...kk',
+] };
+// pez luminoso (se ve bajo el agua)
+G.ART.pez = { pal: { c: '#9affe8', C: '#3ac8b0', x: '#ffffff' }, rows: [
+  '..CC..C',
+  '.CccCCC',
+  'CxcccC.',
+  '.CccCCC',
+  '..CC..C',
+] };
+// murciélago (dos aleteos)
+const PAL_MURCI = { k: '#06040a', n: '#1a1422', e: '#ff6a7a' };
+G.ART.murci1 = { pal: PAL_MURCI, rows: [
+  'k.........k',
+  'nk.......kn',
+  '.nnk.k.knn.',
+  '..nnnennn..',
+  '....kkk....',
+] };
+G.ART.murci2 = { pal: PAL_MURCI, rows: [
+  '...........',
+  '....k.k....',
+  '..nnnennn..',
+  '.nnk.k.knn.',
+  'nk.......kn',
+] };
