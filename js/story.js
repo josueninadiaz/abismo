@@ -376,17 +376,14 @@
       yield say('tharn', 'Ya... no pesa...');
     }
   })();
+  // entre las dos rondas de Oren (los fragmentos salen al usar cada habilidad por primera vez)
   S.cb_oren = (phase, last) => (function* () {
-    yield* fragment(phase);
-    const lines = [
-      ['oren', '...Aquella orilla. Tú eras tan pequeño.'],
-      ['oren', 'Los murales... lo supe allí. Demasiado tarde.'],
-      ['oren', 'Mi cuerpo... vuelve a ser mío. Casi.'],
-      ['oren', 'Mi alma... todavía está aquí. Gracias a ti.'],
-      ['oren', '...'],
-    ];
-    yield say(...lines[phase]);
+    if (!last) {
+      yield say('oren', 'Mi cuerpo... vuelve a ser mío. Casi.');
+      yield say('oren', 'Pero ella aún me sujeta por dentro. Sigue... aunque te suplique.');
+    } else yield say('oren', 'Mi alma... todavía está aquí. Gracias a ti.');
   })();
+  S.fragmento = (i) => fragment(i);
   S.derrota = function* (id) {
     yield G.fade(1, 40);
     yield say('yo', id === 'oren' ? 'Otra vez. No voy a dejarte ahí dentro.' : 'Todavía no. Otra vez.');

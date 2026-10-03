@@ -22,15 +22,14 @@
   CB.SKILLDEF = ACT;
   const FIGHTS = {
     oren: {
-      name: 'Oren', title: 'El antiguo líder', rig: 'oren', bg: 'santuario', music: 'vals', immune: true, crystals: 8, hp: 50,
+      name: 'Oren', title: 'El antiguo líder', rig: 'oren', bg: 'santuario', music: 'vals', immune: true, crystals: 8, hp: 70, fragments: true,
+      // dos rondas; cada habilidad usada por primera vez sobre él devuelve un fragmento de memoria,
+      // y la purificación final solo funciona cuando ya se han usado las cinco
       phases: [
-        { seal: 'mente', attacks: ['baston', 'ecos'] },
-        { seal: 'recuerdos', attacks: ['baston', 'ecos', 'ola'] },
-        { seal: 'cuerpo', attacks: ['baston', 'ola', 'pilar'] },
-        { seal: 'alma', attacks: ['baston', 'ecos', 'ola', 'pilar'] },
+        { seal: 'cuerpo', attacks: ['baston', 'ecos', 'ola'] },
         { seal: 'ser', attacks: ['baston', 'ecos', 'ola', 'pilar', 'tormenta'] },
       ],
-      barks: [['Vete... antes de que ella hable por mí.', 'No es mi voz...'], ['Recuerdo... una orilla...', 'Es... mío...'], ['Mi cuerpo... ya no es mío.'], ['Todavía queda... algo de mí...'], ['Termina... lo que empecé.']],
+      barks: [['Vete... antes de que ella hable por mí.', 'No es mi voz...', 'Recuerdo... una orilla...'], ['Todavía queda... algo de mí...', 'Termina... lo que empecé.']],
     },
   };
   // ataques del enemigo: lista de golpes (tiempo de impacto, tipo); tipo 'ola' hay que saltarlo, 'pilar' solo se esquiva
@@ -42,13 +41,14 @@
     tormenta: () => ({ name: 'Tormenta de cristal', hits: [[50, 'eco'], [62, 'golpe'], [80, 'ola'], [100, 'eco'], [112, 'golpe']] }),
   };
 
-  let S, O, def, ph, st, stT, onEnd, fx, floats, banner, menu, act, eatk, turn, film;
+  let S, O, def, ph, st, stT, onEnd, fx, floats, banner, menu, act, eatk, turn, film, used;
+  const ORDER = ['mente', 'recuerdos', 'cuerpo', 'alma', 'ser'];
   CB.start = (id, done) => {
     def = FIGHTS[id]; onEnd = done;
     CB.active = true; CB.id = id; CB.finished = false; CB.busy = false; CB.t = 0;
     S = { x: 70, hx: 70, y: 0, vy: 0, hp: 100, max: 100, pa: 3, st: 'idle', t: 0, lock: 0 };
     O = { x: 190, hx: 190, y: 0, corr: def.hp, max: def.hp, st: 'idle', crystals: def.crystals, pose: { t: 0, arm: 0, crouch: 0, lean: 0 }, hit: 0 };
-    fx = []; floats = []; banner = null; ph = 0; turn = 1;
+    fx = []; floats = []; banner = null; ph = 0; turn = 1; used = new Set();
     const bg = L.makeBg(def.bg, CW); film = bg;
     startPhase();
     G.audio.play(def.music); G.audio.ambient(null);
@@ -122,10 +122,17 @@
     if (a.k !== 'golpe') G.audio.sfx(a.k); else G.audio.sfx('swing');
     // efecto según la habilidad
     if (a.k === 'mente' || a.k === 'recuerdos' || a.k === 'ser') fx.push({ beam: a.k, life: 20, x0: S.x + 10, x1: O.x });
+    // primera vez que usa esta habilidad sobre él: un fragmento de memoria
+    if (def.fragments && a.k !== 'golpe' && !used.has(a.k)) { used.add(a.k); a.frag = ORDER.indexOf(a.k); }
     if (a.k === 'alma') { S.hp = Math.min(S.max, S.hp + Math.round(A.heal * mult)); floats.push({ x: S.x, y: FLOOR - 50, text: '+Luz', col: COL.alma, t: 0 }); fx.push({ ringfx: true, x: O.x, life: 24, col: COL.alma }); }
     // ¿purificación?
     if (O.st === 'dizzy') {
-      if (a.k === sealNow()) { finisher(); return; }
+      if (a.k === sealNow()) {
+        const missing = def.fragments && ph === def.phases.length - 1 ? ORDER.filter((k) => !used.has(k)) : [];
+        if (!missing.length) { finisher(); return; }
+        floats.push({ x: O.x, y: FLOOR - 90, text: 'Aún le faltan: ' + missing.map(nameOf).join(', '), col: '#d8bf86', t: 0 });
+        return;
+      }
       if (a.k !== 'golpe') floats.push({ x: O.x, y: FLOOR - 90, text: 'El sello pide ' + nameOf(sealNow()), col: '#d8bf86', t: 0 });
       return;
     }
@@ -143,6 +150,7 @@
   }
   function endPlayerTurn() {
     if (st !== 'act') return;
+    if (act.frag != null) { const i = act.frag; act.frag = null; st = 'pause'; runScene(function* () { yield* G.STORY.fragmento(i); st = 'act'; endPlayerTurn(); }); return; }
     if (O.st === 'dizzy') { st = 'menuwait'; stT = 0; return; } // en trance no ataca: vuelve tu turno
     startEnemy();
   }
@@ -248,6 +256,7 @@
         const last = ph >= def.phases.length - 1;
         runScene(function* () {
           yield G.wait(20);
+          if (act && act.frag != null) { const i = act.frag; act.frag = null; yield* G.STORY.fragmento(i); }
           yield* G.STORY['cb_' + CB.id](ph, last);
           if (last) { st = 'purify'; stT = 0; } else { ph++; S.pa = Math.max(S.pa, 3); startPhase(); }
         });
@@ -398,6 +407,6 @@
   CB.sealSkill = () => (def ? sealNow() : null);
   CB.debug = {
     state: () => ({ st, ph, hp: S.hp, pa: S.pa, corr: O.corr, ost: O.st }),
-    finish: () => { O.corr = 0; O.st = 'dizzy'; act = { k: sealNow(), t: 0, hits: 1, done: 0, rings: [] }; st = 'act'; strike('perfecto'); },
+    finish: () => { if (ph === def.phases.length - 1) for (const k of ORDER) used.add(k); O.corr = 0; O.st = 'dizzy'; act = { k: sealNow(), t: 0, hits: 1, done: 0, rings: [] }; st = 'act'; strike('perfecto'); },
   };
 })();
