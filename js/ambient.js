@@ -113,6 +113,25 @@
       Z.root.add(bb.root);
       S.crit.push({ kind: 'polilla', bb, l, ph: Math.random() * 6.28, r: G.rnd(8, 18), sp: G.rnd(0.03, 0.06) });
     }
+    // caminos sutiles: piedrecitas doradas en el suelo con un pulso que avanza en la dirección a seguir
+    S.guides = [];
+    for (const gd of zd.guides || []) {
+      const dots = [];
+      for (let i = 0; i < gd.pts.length - 1; i++) {
+        const [ax, ay] = gd.pts[i], [bx, by] = gd.pts[i + 1], n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) * 1.6));
+        for (let k = 0; k < n; k++) {
+          const x = (ax + (bx - ax) * k / n) * TS + 8 + (G.hash(i, k, 3) - 0.5) * 6, z = (ay + (by - ay) * k / n) * TS + 8 + (G.hash(i, k, 4) - 0.5) * 6;
+          const c = Z.cells[Math.floor(z / TS)] && Z.cells[Math.floor(z / TS)][Math.floor(x / TS)];
+          if (c && !c.t.water && !c.t.pit && c.h <= 8) dots.push([x, Math.max(0, c.h) + 0.5, z]);
+        }
+      }
+      const m = new THREE.InstancedMesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }), Math.max(1, dots.length));
+      m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, dots.length) * 3), 3);
+      dots.forEach((d, i) => { dummy.position.set(d[0], d[1], d[2]); dummy.rotation.set(-Math.PI / 2, 0, G.hash(i, 9) * 3); dummy.scale.setScalar(1); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); });
+      m.count = dots.length; m.renderOrder = 3; m.frustumCulled = false; m.visible = false;
+      Z.root.add(m);
+      S.guides.push({ gd, m, n: dots.length });
+    }
     // peces
     for (let i = 0; i < Math.min(F.peces, Math.ceil(water.length / 6)); i++) {
       const [cx, cy] = water[Math.floor(Math.random() * water.length)];
@@ -140,6 +159,18 @@
     flyMat.uniforms.uLife.value = life;
     flyMat.uniforms.uScale.value = G.R.renderer.getDrawingBufferSize(new THREE.Vector2()).y / 540;
     const P = G.EX.player;
+    // caminos sutiles: solo se ven los que tocan ahora, y laten despacio hacia delante
+    const gcol = new THREE.Color();
+    for (const q of S.guides) {
+      const on = (!q.gd.if || G.flag(q.gd.if)) && (!q.gd.unless || !G.flag(q.gd.unless));
+      q.m.visible = on;
+      if (!on) continue;
+      for (let i = 0; i < q.n; i++) {
+        const k = 0.22 + Math.pow(Math.max(0, Math.sin(t * 0.04 - i * 0.45)), 6) * 0.9;
+        q.m.setColorAt(i, gcol.setRGB(1 * k, 0.85 * k, 0.5 * k));
+      }
+      q.m.instanceColor.needsUpdate = true;
+    }
     // niebla
     for (const q of S.mist) {
       q.m.position.x += q.vx; q.m.position.z += q.vz;

@@ -31,7 +31,16 @@
 
   const MARKED = G.PROTA.build({ marks: true });
   const INFECTED = G.PROTA.build({ marks: true, crystals: true });
-  const variant = (name, o) => makeSet(name, o.crystals ? INFECTED : o.marks === false ? G.PROTA : MARKED, Object.assign({}, BASE, o.pal));
+  const variant = (name, o) => {
+    const frames = o.crystals ? INFECTED : o.marks === false ? G.PROTA : MARKED, pal = Object.assign({}, BASE, o.pal);
+    const set = makeSet(name, frames, pal);
+    // los que pelean también tienen sus poses de combate
+    if (o.fighter) {
+      const cb = (set.cb = {});
+      for (const k in frames.combat) { const r = frames.combat[k].map((rows) => G.sprite(rows, pal)); cb[k] = { right: r, left: r.map(G.flipSpr) }; }
+    }
+    return set;
+  };
   const INFECT = { c: '#ff5a6a', C: '#b02a44', M: '#6a1a2a', X: '#ff8a9a', E: '#ffd0da', e: '#ffd0d8' };
 
   // Mira: joven de la tribu, curiosa; marcas azules
@@ -45,7 +54,7 @@
   // Varek, el nuevo líder: rojo del pilar en la ropa y marcas que ya se tiñen
   variant('varek', { crystals: true, pal: { k: '#241624', r: '#1c101c', d: '#3a1e34', t: '#5a2a44', T: '#8a3a5a', h: '#e0c8b0', b: '#a0303e', B: '#6a1a2a', x: '#ff6a8a', X: '#ff8a9a', E: '#ffd0da' } });
   // habitante infectado: ojos y marcas rojos, cristales en los hombros
-  variant('infectado', { crystals: true, pal: Object.assign({ k: '#221a22', r: '#1a141a', d: '#322630', t: '#4a3440', T: '#6a4a58', w: '#d8ccd0', W: '#c0b4b8', x: '#ff4a5a' }, INFECT) });
+  variant('infectado', { crystals: true, fighter: true, pal: Object.assign({ k: '#221a22', r: '#1a141a', d: '#322630', t: '#4a3440', T: '#6a4a58', w: '#d8ccd0', W: '#c0b4b8', x: '#ff4a5a' }, INFECT) });
   // Oren, el antiguo líder: capa clara, cubierto de cuarzo
   const OREN = { k: '#2a2e3a', r: '#22262e', d: '#3a4050', t: '#6a6270', T: '#9a90a0', w: '#f0ece6', h: '#e8dcc0', b: '#c0a870', B: '#8a7440', x: '#ffd890' };
   variant('oren', { crystals: true, pal: Object.assign({}, OREN, INFECT, { x: '#ff4a5a' }) });

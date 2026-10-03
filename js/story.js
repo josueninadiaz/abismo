@@ -216,10 +216,26 @@
     yield say('yo', 'Esta hierba roja... Sé que no crecía aquí. No sé cómo lo sé.');
     yield say('yo', 'Y el aire zumba. Como cristal que canta.');
   };
+  // el habitante perdido: te corta el paso en la Senda (lucha cuerpo a cuerpo, entre iguales)
   S.perdido = function* () {
+    if (G.flag('perdido_libre')) { yield say('perdido_libre', 'Gracias... Ahora recuerdo mi casa. Junto al lago, sí. Seguro.'); return; }
+    const P = G.EX.player, A = G.EX.get('perdido');
+    G.EX.frozen = true;
+    if (A) { A.busy = true; A.goal = null; A.faceTo(P.x, P.z); }
     yield say('perdido', 'La Luz me enseñó quién era... Tenía una casa junto al lago... ¿O era junto al Claro?');
-    yield say('perdido', 'Ya no me acuerdo de antes. Pero no importa. La Luz lo recuerda por mí.');
+    yield say('perdido', 'Tú... Tú no la oyes. Se nota en tus ojos vacíos.');
+    yield say('perdido', '¡La Luz dice que no puedes subir! ¡Que no perteneces!');
+    yield G.combat('perdido');
+    G.setFlag('perdido_libre');
+    G.EX.enter('senda', Math.floor(P.x / 16), Math.floor(P.z / 16), 'up');
+    G.EX.frozen = true;
+    yield G.fade(0, 40);
+    yield say('perdido_libre', '...¿Qué hacía yo aquí? Me duele la cabeza.');
+    yield say('perdido_libre', 'Recuerdo algo: una casa junto al lago. Mía. Y la Luz... cantándome encima de mis recuerdos.');
+    yield say('perdido_libre', 'Arriba está el Claro. Y el guardián. Él no es como yo: es enorme. Ten cuidado.');
+    G.EX.frozen = false;
   };
+
   S.tharn = function* () {
     G.EX.frozen = true;
     const P = G.EX.player;
@@ -320,6 +336,20 @@
   }
 
   // ── escenas dentro de los combates ──
+  S.tutorial_tiro = function* () {
+    yield say('yo', 'Es enorme. No puedo acercarme así como así...');
+    yield say(null, G.keys('Mantén [a] para disparar chispas de luz. ↑ para apuntar arriba, ↓ para agacharte.'));
+    yield say(null, G.keys('[j]: saltar. Los cristales CIAN se pueden PARAR: salta y pulsa [j] otra vez al tocarlos.'));
+    yield say(null, G.keys('Cada parada carga una carta de Resonancia. [b] gasta una en un disparo potente. [x]: embestir.'));
+    yield say(null, G.keys('Tres golpes y caes. Cuando quede en trance, purifícalo con [y] (la habilidad de su sello).'));
+  };
+  S.tutorial_turnos = function* () {
+    yield say('yo', 'No puedo pelear con él como con los demás. Tengo que pensar cada paso.');
+    yield say(null, 'Por turnos. En el tuyo eliges Golpe o una habilidad. Las habilidades cuestan PA; el Golpe te da PA.');
+    yield say(null, G.keys('Al lanzarla, un anillo se cierra sobre él: pulsa [a] justo cuando toque el círculo para un golpe perfecto.'));
+    yield say(null, G.keys('En su turno: [x] esquiva (fácil) · [a] PARA en el instante del golpe (difícil: da PA) · [j] salta las ondas.'));
+    yield say(null, 'Si paras todos sus golpes, contraatacas. Fíjate en el destello blanco: avisa justo antes de cada golpe.');
+  };
   S.tutorial_combate = function* () {
     yield say('yo', 'Hay algo pegado a él. Como sellos de cristal sobre su mente.');
     yield say(null, 'La barra roja de la derecha es su Corrupción. Bájala a cero y quedará en trance.');
@@ -328,6 +358,9 @@
     yield say(null, G.keys('Tus habilidades son golpes especiales: [s]. También con giros: ↓→ + [a] = Mente.'));
     yield say(null, 'Cuando esté en trance, ¡PURIFÍCALO! con la habilidad de su sello (el medallón de arriba).');
   };
+  S.cb_perdido = () => (function* () {
+    yield say('perdido', '...La Luz... se calla...');
+  })();
   S.cb_tharn = (phase, last) => (function* () {
     if (!last) {
       yield say('tharn', '¿Por qué... mi cabeza... está en silencio?');
@@ -391,6 +424,8 @@
   };
 
   // ── combate como tarea de una escena ──
+  // estilo de combate de cada enemigo: lucha (Mortal Kombat), tiro (Cuphead), turnos (Expedition 33)
+  G.FIGHT_STYLE = { perdido: 'lucha', tharn: 'tiro', oren: 'turnos' };
   G.combat = (id) => {
     let done = false, phase = 0;
     return {
@@ -411,6 +446,8 @@
           if (this.t >= 34) {
             phase = 2;
             G.mode = 'combat';
+            // cada enemigo pelea a su manera
+            G.CB = G.CBS[G.FIGHT_STYLE[id] || 'lucha'];
             G.CB.start(id, () => { done = true; });
             this.t = 0;
           }

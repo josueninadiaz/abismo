@@ -7,7 +7,8 @@
 // Cuando la Corrupción llega a cero queda en trance: «¡PURIFÍCALO!» con la habilidad de su sello.
 (function () {
   const CW = 256, CH = 144, FLOOR = 124, STAGE = 400;
-  const CB = (G.CB = { active: false });
+  const CB = { active: false };
+  G.CBS = G.CBS || {}; G.CBS.lucha = CB; G.CB = CB;
   const g = G.R.flatctx;
 
   // ── pequeña librería de píxeles ──
@@ -184,6 +185,11 @@
 
   // ── enfrentamientos ──
   const FIGHTS = {
+    perdido: {
+      name: 'Habitante perdido', title: 'Infectado', rig: 'sprite', spr: 'infectado', bg: 'senda', music: 'combate', immune: false, crystals: 3, half: 8, block: [0.15, 0.25], hp: 40,
+      rounds: [{ seal: 'mente', speed: 1.1, moves: ['zarpazo', 'garras', 'barrido', 'salto', 'embestida'] }],
+      barks: [['La Luz... me lo enseñó...', '¡Vete! ¡Tú no oyes nada!', 'Tenía una casa... junto al lago...']],
+    },
     tharn: {
       name: 'Tharn', title: 'Guardián del Claro', rig: 'tharn', bg: 'claro', music: 'combate', immune: false, crystals: 5, half: 15, block: [0.08, 0.18], hp: 55,
       rounds: [
@@ -754,13 +760,16 @@
 
   // ── fondos (dos capas con paralaje) ──
   let bgFar = null, bgNear = null;
-  function buildBg() {
-    const claro = def.bg === 'claro';
+  function buildBg() { const b = makeBg(def.bg, STAGE); bgFar = b.far; bgNear = b.near; }
+  // fondos de combate (claro del pilar, santuario, senda), con dos capas para el paralaje
+  function makeBg(kind, STAGE) {
+    const claro = kind === 'claro', senda = kind === 'senda';
     const FW = Math.round(CW + (STAGE - CW) * 0.5);
-    bgFar = G.makeCanvas(FW, CH);
+    let bgFar = G.makeCanvas(FW, CH);
     let c = bgFar.getContext('2d');
     const sky = c.createLinearGradient(0, 0, 0, CH);
     if (claro) { sky.addColorStop(0, '#12060e'); sky.addColorStop(0.6, '#2a0c1a'); sky.addColorStop(1, '#0a0408'); }
+    else if (senda) { sky.addColorStop(0, '#040c10'); sky.addColorStop(0.6, '#0c2026'); sky.addColorStop(1, '#04080a'); }
     else { sky.addColorStop(0, '#08060e'); sky.addColorStop(0.6, '#1a1030'); sky.addColorStop(1, '#06040a'); }
     c.fillStyle = sky; c.fillRect(0, 0, FW, CH);
     c.fillStyle = claro ? '#1a0812' : '#100a1c';
@@ -773,11 +782,15 @@
       P2([[cx - 3, 104], [cx - 2, 24], [cx, 14], [cx + 1, 24], [cx + 2, 104]], '#a83a5a');
       c.fillStyle = '#ff9ab0'; c.fillRect(cx, 18, 1, 84);
       for (const [x, h, w] of [[-22, 18, 4], [20, 24, 5], [-34, 10, 3], [32, 13, 3], [-14, 11, 3]]) { P2([[cx + x - w, 104], [cx + x, 104 - h], [cx + x + w, 104]], '#5a1a30'); P2([[cx + x, 104], [cx + x, 104 - h], [cx + x + w, 104]], '#8a2a44'); }
+    } else if (senda) {
+      // raíces rojas que bajan del techo y hongos de luz al fondo
+      for (let x = 6; x < FW; x += 23) { const h = 20 + G.hash(x, 3) * 50; c.fillStyle = G.hash(x, 4) > 0.5 ? '#3a0c18' : '#24101a'; for (let y = 0; y < h; y++) c.fillRect(Math.round(x + Math.sin(y * 0.15 + x) * 2), y, 2, 1); }
+      for (let x = 10; x < FW; x += 37) { c.fillStyle = '#0e3a3a'; c.fillRect(x, 92, 2, 12); c.fillStyle = '#3ac8c0'; c.fillRect(x - 3, 89, 8, 3); }
     } else {
       c.fillStyle = '#1e1634';
       for (let ax = 10; ax < FW; ax += 80) { c.fillRect(ax, 40, 8, 70); c.fillRect(ax + 34, 40, 8, 70); c.beginPath(); c.arc(ax + 21, 42, 21, Math.PI, 0); c.lineTo(ax + 34, 42); c.arc(ax + 21, 42, 13, 0, Math.PI, true); c.fill(); }
     }
-    bgNear = G.makeCanvas(STAGE, CH);
+    let bgNear = G.makeCanvas(STAGE, CH);
     c = bgNear.getContext('2d');
     const ridge = (base, amp, col, seed) => {
       c.fillStyle = col;
@@ -786,18 +799,20 @@
         c.fillRect(x, Math.round(h), 1, CH);
       }
     };
-    ridge(98, 18, claro ? '#1e0a14' : '#140e24', 1);
-    ridge(112, 10, claro ? '#2a0e1a' : '#1c1430', 5);
+    ridge(98, 18, claro ? '#1e0a14' : senda ? '#0a1a1e' : '#140e24', 1);
+    ridge(112, 10, claro ? '#2a0e1a' : senda ? '#10262a' : '#1c1430', 5);
     const fl = c.createLinearGradient(0, FLOOR, 0, CH);
-    fl.addColorStop(0, claro ? '#4a1422' : '#2a2040'); fl.addColorStop(1, '#08040a');
+    fl.addColorStop(0, claro ? '#4a1422' : senda ? '#16343a' : '#2a2040'); fl.addColorStop(1, '#08040a');
     c.fillStyle = fl; c.fillRect(0, FLOOR, STAGE, CH - FLOOR);
-    c.fillStyle = claro ? '#6e1a2c' : '#3a2e58'; c.fillRect(0, FLOOR, STAGE, 1);
+    c.fillStyle = claro ? '#6e1a2c' : senda ? '#2a5a5a' : '#3a2e58'; c.fillRect(0, FLOOR, STAGE, 1);
     for (let x = 0; x < STAGE; x++) {
       if (G.hash(x, 5, 1) > 0.55) px(c, x, FLOOR - 1, claro ? '#8a2436' : '#2a3a4a');
       if (claro && G.hash(x, 6, 1) > 0.8) { const h = 2 + G.hash(x, 7) * 5; c.fillStyle = G.hash(x, 8) > 0.5 ? '#c02a3a' : '#7a1628'; c.fillRect(x, FLOOR - h, 1, h); }
       if (!claro && G.hash(x, 6, 1) > 0.9) { c.fillStyle = '#3a3060'; c.fillRect(x, FLOOR - 2, 2, 2); }
+      if (senda && G.hash(x, 6, 1) > 0.86) { c.fillStyle = G.hash(x, 7) > 0.7 ? '#a02a3a' : '#2a7a6a'; c.fillRect(x, FLOOR - 3, 1, 3); }
       if (G.hash(x, 9, 2) > 0.7) px(c, x, FLOOR + 2 + Math.floor(G.hash(x, 10) * 16), claro ? '#2a0a14' : '#161028');
     }
+    return { far: bgFar, near: bgNear };
   }
 
   // ── dibujo ──
@@ -861,7 +876,35 @@
     g.globalCompositeOperation = 'source-over';
     g.restore();
   }
+  // el rival dibujado con sprites: elige la pose según lo que esté haciendo
+  function enemySprite() {
+    const A = G.SPR[def.spr].cb, side = E.face > 0 ? 'right' : 'left';
+    const pick = (k, i) => { const l = A[k][side]; return l[((i % l.length) + l.length) % l.length]; };
+    switch (E.st) {
+      case 'atk': { const a = E.atk, m = a.m; if (m.special === 'dash') return pick('dash', 0); if (m.special === 'slam') return pick('crouch', 0); const su = Math.round(m.su / (E.speed || 1)); return a.t < su ? pick(m.pose === 'low' ? 'crouch' : 'raise', 0) : pick(m.pose === 'low' ? 'sweep' : 'jab1', 0); }
+      case 'jump': return pick('jump', E.vy > 0 ? 0 : 1);
+      case 'air': case 'fall': case 'hit': return pick('hurt', 0);
+      case 'block': return pick('guard', 0);
+      case 'down': return null;
+      case 'getup': case 'dizzy': return pick('crouch', 0);
+      case 'walk': return pick('walk', Math.floor(CB.t / 6));
+      default: return pick('idle', Math.floor(CB.t / 16));
+    }
+  }
   function drawEnemy(glowPass) {
+    if (def.rig === 'sprite') {
+      const f = enemySprite();
+      const x = Math.round(E.x), y = FLOOR - Math.round(E.y);
+      if (!f) { if (!glowPass) { const l = G.SPR.prota_lie; g.drawImage(G.tint(l.c, '#2a1a22'), x - l.w / 2, FLOOR - l.h); } return; }
+      if (!glowPass) {
+        g.drawImage(f.c, x - Math.round(f.w / 2), y - f.h);
+        if (E.hit > 0 && E.hit % 2) { g.globalCompositeOperation = 'lighter'; g.drawImage(G.tint(f.c, '#ffffff'), x - Math.round(f.w / 2), y - f.h); g.globalCompositeOperation = 'source-over'; }
+      } else {
+        if (f.e) g.drawImage(f.e, x - Math.round(f.w / 2), y - f.h);
+        if (E.st === 'dizzy') for (let i = 0; i < 3; i++) { const a2 = CB.t * 0.1 + i * 2.1; g.fillStyle = i % 2 ? '#ffd070' : '#9affe8'; g.fillRect(Math.round(E.x + Math.cos(a2) * 10), Math.round(FLOOR - 40 + Math.sin(a2) * 3), 2, 2); }
+      }
+      return;
+    }
     const rig = RIG[def.rig];
     E.pose.crystals = E.crystals;
     const rot = (E.pose.rot || 0) * (E.face > 0 ? Math.PI / 2 : -Math.PI / 2);
@@ -1102,6 +1145,7 @@
       c.globalAlpha = 1;
     }
   };
+  G.CBLIB = { px, ell, ball, tri, limb, shard, withOutline, RIG, tmpA, makeBg, CW, CH };
   CB.say = (who, text) => barks.push({ who, text, t: 0, n: 200 });
   CB.isFighting = () => st === 'fight';
   CB.cdFrac = (id) => (P && P.cd[id] > 0 ? P.cd[id] / SKILLDEF[id].cd : SKILLDEF[id] && SKILLDEF[id].meter && P && P.meter < 100 ? 1 - P.meter / 100 : 0);

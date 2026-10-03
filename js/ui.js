@@ -18,6 +18,7 @@
     aldeano2: { name: 'Habitante', spr: 'aldeano2' },
     aldeano3: { name: 'Habitante', spr: 'aldeano1' },
     perdido: { name: 'Habitante perdido', spr: 'infectado' },
+    perdido_libre: { name: 'Habitante', spr: 'aldeano2' },
     tharn: { name: () => (G.flag('tharn_libre') ? 'Tharn' : 'Guardián'), spr: 'tharn' },
     tharn_libre: { name: 'Tharn', spr: 'tharn_libre' },
     oren: { name: () => (G.flag('oren_libre') ? 'Oren' : 'Antiguo líder'), spr: 'oren' },

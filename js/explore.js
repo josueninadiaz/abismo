@@ -281,7 +281,7 @@
       const back = { up: [0, 1], down: [0, -1], left: [1, 0], right: [-1, 0] }[ex.dir];
       P.x += back[0] * 10; P.z += back[1] * 10;
       if (ex.block) { const b = E.get(ex.block); G.run(G.STORY[b.talk]); }
-      else G.run(function* () { yield G.say(null, ex.msg || 'No puedes pasar.'); });
+      else G.run(function* () { yield G.say(ex.who || null, ex.msg || 'No puedes pasar.'); });
       return;
     }
     G.go(ex.to, ex.tx, ex.ty, ex.dir === 'left' ? 'left' : ex.dir === 'right' ? 'right' : ex.dir);

@@ -36,7 +36,12 @@ G.ZONES.gruta = {
     '############################',
   ],
   start: [6, 11],
-  exits: [{ x0: 27, y0: 8, x1: 27, y1: 10, to: 'aldea', tx: 1, ty: 13, dir: 'right' }],
+  exits: [{ x0: 27, y0: 8, x1: 27, y1: 10, to: 'aldea', tx: 1, ty: 13, dir: 'right', need: 'mapa', who: 'yo', msg: 'Todavía no. Siento que en esta cueva hay algo que debo encontrar antes de salir.' }],
+  // piedrecitas de luz que señalan el camino, muy tenues
+  guides: [
+    { unless: 'mapa', pts: [[6, 11], [4, 11], [4, 9], [3, 7], [5, 6], [7, 4]] },
+    { if: 'mapa', pts: [[7, 4], [5, 6], [3, 7], [4, 9], [4, 11], [8, 12], [11, 13], [15, 12], [18, 11], [21, 9], [24, 9], [27, 9]] },
+  ],
   things: [
     { x: 11, y: 9, text: ['El agua brilla por dentro, como si guardara estrellas.', 'Tu reflejo te devuelve la mirada. No ves ninguna marca en tu piel.'] },
     { x: 7, y: 5, text: ['Hongos de luz. Laten despacio, como si respiraran.'] },
@@ -101,6 +106,11 @@ G.ZONES.aldea = {
     { x: 19, y: 14, text: ['El Lago Nhar. Dicen que el Abismo habla más fuerte cerca del agua.', 'Tú solo oyes el goteo.'] },
   ],
   triggers: [{ x0: 1, y0: 13, x1: 3, y1: 15, scene: 'llegada_aldea', once: 'llegada' }],
+  guides: [
+    { unless: 'suen_hablo', pts: [[3, 14], [9, 14], [13, 13], [14, 11], [20, 10], [24, 12], [28, 12]] },
+    { if: 'suen_hablo', unless: 'permiso', pts: [[28, 12], [24, 11], [22, 9], [21, 7]] },
+    { if: 'permiso', pts: [[19, 9], [19, 5], [19, 2], [20, 0]] },
+  ],
 };
 
 G.ZONES.senda = {
@@ -158,7 +168,8 @@ G.ZONES.senda = {
     { x0: 29, y0: 7, x1: 29, y1: 9, to: 'santuario', tx: 1, ty: 13, dir: 'right', need: 'tharn_libre', msg: 'El guardián del Claro te cierra el paso con la mirada.' },
   ],
   npcs: [
-    { id: 'perdido', spr: 'infectado', x: 12, y: 23, dir: 'right', talk: 'perdido', wander: 1 },
+    { id: 'perdido', spr: 'infectado', x: 14, y: 22, dir: 'down', talk: 'perdido', hideIf: 'perdido_libre' },
+    { id: 'perdido2', spr: 'aldeano2', x: 11, y: 22, dir: 'right', talk: 'perdido', showIf: 'perdido_libre' },
     { id: 'tharn', spr: 'tharn', x: 15, y: 12, dir: 'down', talk: 'tharn', scale: 1.35, hideIf: 'tharn_libre' },
     { id: 'tharn2', spr: 'tharn_libre', x: 13, y: 12, dir: 'right', talk: 'tharn_libre', scale: 1.35, showIf: 'tharn_libre' },
   ],
@@ -167,6 +178,7 @@ G.ZONES.senda = {
   ],
   triggers: [
     { x0: 12, y0: 30, x1: 19, y1: 31, scene: 'senda_roja', once: 'senda_roja' },
+    { x0: 9, y0: 24, x1: 21, y1: 25, scene: 'perdido', unless: 'perdido_libre' },
     { x0: 12, y0: 14, x1: 18, y1: 15, scene: 'tharn', once: 'tharn_visto', unless: 'tharn_libre' },
   ],
 };

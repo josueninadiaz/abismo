@@ -18,17 +18,19 @@ Abre `index.html` en el navegador; no necesita servidor, pero la primera vez sí
 | Habilidades (combate) | 1 2 3 4 5 | LB + A B X Y RB | Botones |
 | Habilidad que pide el sello | Q | Y | Y |
 
-## El combate
+## El combate: cada enemigo pelea a su manera
 
-Lucha lateral en 2D al estilo de los juegos de pelea (*Mortal Kombat*, *Street Fighter*), con cámara que sigue a los dos luchadores. El protagonista no mata: purifica. Arriba están tu **Luz** y la **Corrupción** del infectado. Cuando la Corrupción llega a cero, queda en trance y sale **¡PURIFÍCALO!**: hay que rematarlo con la habilidad de su sello (el medallón de arriba). Cada ronda es un sello, y entre rondas se habla.
+El protagonista no mata: purifica. Al final de cada fase el enemigo queda en trance y sale **¡PURIFÍCALO!**: se remata con la habilidad de su sello.
 
-- **Z** puño: púlsalo seguido y encadenas tres golpes; el tercero es un gancho que lo levanta.
-- **X** patada · **↓ + Z** barrido · **en el aire, Z** patada aérea.
-- **Espacio / ↑** saltar (esquiva ondas del suelo y embestidas) · **Shift** rodar · **mantén ←** (atrás) para bloquear, agachado para los golpes bajos.
-- **Especiales**: botones **1-5**, o giros de joystick: ↓→ + Z = Mente · ↓← + Z = Recuerdos · ←→ + X = Cuerpo · →↓→ + Z = Alma · ↓↓ + X = Ser (necesita la **Resonancia** llena, que se carga golpeando y recibiendo golpes).
-- Congelado breve al impactar, chispas, contador de golpes y barras que bajan con retardo.
-- **Tharn, guardián del Claro**: 2 rondas (Mente y Recuerdos).
-- **Oren, el antiguo líder**: inmune al daño físico; solo le afectan las habilidades. Cinco rondas, una por habilidad, y cada una te devuelve un **fragmento de memoria**. Al final cuenta la verdad.
+- **El habitante perdido (Senda), lucha tipo Mortal Kombat** (`js/combat.js`). Barras de Luz y Corrupción, combos de puño (Z), patada (X), barrido, patada aérea, bloquear manteniendo atrás, rodar (Shift) y especiales con 1-5 o con giros de joystick (↓→ + Z = Mente…).
+- **Tharn, el guardián gigante del Claro, tiro tipo Cuphead** (`js/combat_tiro.js`). Mantén Z para disparar chispas de luz (↑ apunta arriba, ↓ agacharse), Espacio para saltar y **parar** los cristales cian en el aire (cargan cartas de Resonancia), X para el disparo potente y Shift para embestir. Tres golpes y caes. Dos fases con patrones distintos (pisotones, esquirlas, zarpazo; raíces, lluvia de cristal, salto de lado a lado) y aspecto de película antigua.
+- **Oren, el antiguo líder, por turnos tipo Expedition 33** (`js/combat_turnos.js`). En tu turno eliges Golpe (da PA) o una habilidad (cuesta PA) y pulsas Z cuando el anillo se cierra para un golpe perfecto. En el suyo: Shift esquiva, Z **para** justo en el golpe (da PA; si paras todos, contraatacas) y Espacio salta las ondas. Un destello blanco avisa de cada golpe. Cinco sellos, cinco fragmentos de memoria.
+
+El estilo de cada enemigo está en `G.FIGHT_STYLE` (`js/story.js`).
+
+## Caminos sutiles
+
+Piedrecitas doradas muy tenues en el suelo laten en la dirección a seguir: en la gruta, hacia el mapa y luego hacia la salida (no se puede salir sin el mapa); en la aldea, hacia Suen, luego hacia Varek y después hacia el paso del norte. Se definen con `guides` en `js/zones.js`.
 
 ## Escena 1: el despertar
 

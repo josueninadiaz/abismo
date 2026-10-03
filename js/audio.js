@@ -226,6 +226,21 @@
     { i: 'bell', v: 0.07, n: 'C6:8 A5:8 G5:8 E5:8 F5:8 D5:8 A#5:8 A5:8' },
     { i: 'pad', v: 0.05, n: held([['F3', 'A3', 'C4'], ['C3', 'E3', 'G3'], ['D3', 'F3', 'A3'], ['A#2', 'D3', 'F3']]) },
   ] };
+  // Combate «a la Cuphead»: swing con bajo que camina, golpes de piano a contratiempo y metales (do menor)
+  S.tiro = { bpm: 152, ch: [
+    { i: 'brass', v: 0.11, n: 'C5:3 Eb5:1 G5:4 F5:3 Eb5:1 C5:4 Bb4:3 C5:1 Eb5:4 r:8 C5:3 Eb5:1 G5:4 Bb5:3 A5:1 G5:4 F5:3 Eb5:1 F5:4 r:8 Ab5:3 G5:1 F5:4 Eb5:3 D5:1 C5:4 D5:3 Eb5:1 F5:2 G5:2 Eb5:4 r:4 C5:3 Eb5:1 G5:4 F#5:3 G5:1 C6:4 B5:2 G5:2 D5:4 C5:4 r:4' },
+    { i: 'harp', v: 0.09, n: '[r:2 (C4,Eb4,G4,Bb4):2 r:2 (C4,Eb4,G4,Bb4):2]x4 [r:2 (Bb3,D4,F4,Ab4):2 r:2 (Bb3,D4,F4,Ab4):2]x4 [r:2 (Ab3,C4,Eb4,G4):2 r:2 (Ab3,C4,Eb4,G4):2]x4 [r:2 (G3,B3,D4,F4):2 r:2 (G3,B3,D4,F4):2]x4' },
+    { i: 'bass', v: 0.17, n: 'C2:4 E2:4 G2:4 A2:4 Bb1:4 D2:4 F2:4 G2:4 C2:4 Eb2:4 G2:4 Bb2:4 A2:4 G2:4 F2:4 Eb2:4 Ab1:4 C2:4 Eb2:4 F2:4 G1:4 B1:4 D2:4 F2:4 Ab1:4 C2:4 D2:4 Eb2:4 G1:4 A1:4 B1:4 D2:4' },
+    { i: 'drum', v: 0.12, n: '[k:3 h:1 s:3 h:1 k:3 h:1 s:3 h:1]x16' },
+  ] };
+  // Vals para Oren (re menor, 3/4): bajo en el primer tiempo, acordes en el segundo y el tercero
+  S.vals = { bpm: 156, ch: [
+    { i: 'strings', v: 0.1, n: 'A4:6 F4:2 E4:2 F4:2 D5:8 C5:2 A#4:2 A4:6 G4:2 F4:2 A4:2 E4:12 A4:6 D5:2 E5:2 F5:2 G5:8 F5:2 E5:2 D5:4 C#5:4 E5:4 A4:12' },
+    { i: 'harp', v: 0.1, n: 'r:4 (F3,A3,D4):4 (F3,A3,D4):4 r:4 (F3,A#3,D4):4 (F3,A#3,D4):4 r:4 (F3,A3,C4):4 (F3,A3,C4):4 r:4 (E3,A3,C#4):4 (E3,A3,C#4):4 r:4 (F3,A3,D4):4 (F3,A3,D4):4 r:4 (G3,A#3,D4):4 (G3,A#3,D4):4 r:4 (E3,A3,C#4):4 (E3,A3,C#4):4 r:4 (E3,G3,C#4):4 (E3,G3,C#4):4' },
+    { i: 'bass', v: 0.15, n: 'D2:12 A#1:12 F2:12 A1:12 D2:12 G1:12 A1:12 A1:12' },
+    { i: 'choir', v: 0.035, n: 'D4:24 C4:24 D4:24 C#4:24' },
+    { i: 'bell', v: 0.04, n: 'r:84 A5:12' },
+  ] };
   S.victoria = { bpm: 100, loop: false, ch: [
     { i: 'harp', v: 0.2, n: 'D4:1 F4:1 A4:1 D5:1 F5:1 A5:1 D6:10' },
     { i: 'brass', v: 0.12, n: 'r:6 (D4,F#4,A4):10' },
@@ -410,6 +425,9 @@
     murcielagos() { A.batsNow(); },
     // respiración: inspirar y soltar el aire (ruido filtrado)
     breath() { for (const [d, len, f, v] of [[0, 1.1, 700, 0.09], [1.3, 1.6, 480, 0.07]]) { const t = ctx.currentTime + d, bp = filt('bandpass', f, 1.2, sfxBus), gg = gainTo(0, bp); gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(v, t + len * 0.4); gg.gain.linearRampToValueAtTime(0, t + len); bp.frequency.linearRampToValueAtTime(f * (d ? 0.8 : 1.25), t + len); noise(t, t + len + 0.1, gg); } },
+    pew() { tone('square', 1400 + Math.random() * 200, 0.04, 0.025); },
+    parry() { tone('sine', 1568, 0.25, 0.1, 0, true); tone('sine', 2349, 0.35, 0.08, 0.05, true); },
+    tick() { tone('triangle', 2200, 0.03, 0.06); },
     jump() { sweep(260, 700, 0.12, 0.08, 'triangle'); },
     land() { thump(120, 0.12); crunch(0.05, 0.05); },
     splash() { crunch(0.3, 0.2); for (let i = 0; i < 4; i++) tone('sine', 600 + Math.random() * 900, 0.2, 0.04, i * 0.04, true); },
